@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { X, Archive } from 'lucide-react'
 import {
-  PROJECT_TYPES, PROJECT_STATUSES, PRIORITIES, PAYMENT_STATUSES, humanise,
+  PROJECT_TYPES, SELECTABLE_PROJECT_STATUSES, PRIORITIES, PAYMENT_STATUSES, humanise,
 } from '@/lib/types'
 import type { ProjectWithMetrics } from '@/lib/types'
 import type { ProjectInput } from '@/lib/projects'
@@ -23,7 +23,7 @@ export default function ProjectForm({ project, onClose }: { project: ProjectWith
 
   const [name, setName] = useState(project?.name ?? '')
   const [type, setType] = useState(project?.type ?? 'personal')
-  const [status, setStatus] = useState(project?.status ?? 'not_started')
+  const [status, setStatus] = useState(project?.status ?? 'active')
   const [priority, setPriority] = useState(project?.priority ?? 'medium')
   const [startDate, setStartDate] = useState(project?.start_date ?? '')
   const [dueDate, setDueDate] = useState(project?.due_date ?? '')
@@ -47,8 +47,8 @@ export default function ProjectForm({ project, onClose }: { project: ProjectWith
       start_date: startDate || null,
       due_date: dueDate || null,
       project_value: num(value),
-      amount_charged: num(charged),
-      amount_paid: num(paid),
+      amount_charged: num(charged) ?? 0,
+      amount_paid: num(paid) ?? 0,
       payment_status: paymentStatus,
       next_action: nextAction.trim() || null,
       ai_can_help: aiCanHelp,
@@ -98,7 +98,7 @@ export default function ProjectForm({ project, onClose }: { project: ProjectWith
             <div>
               <label className={labelCls} htmlFor="p-status">Status</label>
               <select id="p-status" value={status} onChange={(e) => setStatus(e.target.value as typeof status)} className={inputCls}>
-                {PROJECT_STATUSES.map((s) => <option key={s} value={s}>{humanise(s)}</option>)}
+                {SELECTABLE_PROJECT_STATUSES.map((s) => <option key={s} value={s}>{humanise(s)}</option>)}
               </select>
             </div>
             <div>
@@ -114,11 +114,11 @@ export default function ProjectForm({ project, onClose }: { project: ProjectWith
               </select>
             </div>
             <div>
-              <label className={labelCls} htmlFor="p-start">Start date</label>
+              <label className={labelCls} htmlFor="p-start">Start date <span className="text-slate-300">(optional)</span></label>
               <input id="p-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputCls} />
             </div>
             <div>
-              <label className={labelCls} htmlFor="p-due">Due date</label>
+              <label className={labelCls} htmlFor="p-due">Due date <span className="text-slate-300">(optional)</span></label>
               <input id="p-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className={inputCls} />
             </div>
           </div>
@@ -139,7 +139,7 @@ export default function ProjectForm({ project, onClose }: { project: ProjectWith
           </div>
 
           <div>
-            <label className={labelCls} htmlFor="p-next">Next action</label>
+            <label className={labelCls} htmlFor="p-next">Next action <span className="text-slate-300">(optional)</span></label>
             <textarea id="p-next" rows={2} value={nextAction} onChange={(e) => setNextAction(e.target.value)} className={inputCls} placeholder="The single next thing to move this forward" />
           </div>
 

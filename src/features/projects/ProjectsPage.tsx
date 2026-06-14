@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus, FolderKanban } from 'lucide-react'
 import { useProjects } from '@/features/projects/useProjects'
 import ProjectForm from '@/features/projects/ProjectForm'
@@ -21,12 +22,12 @@ function Flag({ tone, label }: { tone: 'rose' | 'amber' | 'slate'; label: string
   return <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${cls}`}>{label}</span>
 }
 
-function Card({ p, onEdit }: { p: ProjectWithMetrics; onEdit: () => void }) {
+function Card({ p, onOpen }: { p: ProjectWithMetrics; onOpen: () => void }) {
   const m = p.metrics
   const progress = m?.overall_progress ?? 0
   const outstanding = m?.outstanding_balance ?? 0
   return (
-    <button onClick={onEdit} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left transition-colors hover:border-slate-300">
+    <button onClick={onOpen} className="flex flex-col rounded-2xl border border-slate-200 bg-white p-4 text-left transition-colors hover:border-slate-300">
       <div className="mb-2 flex items-start justify-between gap-2">
         <span className="font-medium text-slate-800">{p.name}</span>
         <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusTone[p.status]}`}>{humanise(p.status)}</span>
@@ -56,16 +57,13 @@ function Card({ p, onEdit }: { p: ProjectWithMetrics; onEdit: () => void }) {
 export default function ProjectsPage() {
   const { data, isLoading, isError, error } = useProjects()
   const [formOpen, setFormOpen] = useState(false)
-  const [editing, setEditing] = useState<ProjectWithMetrics | null>(null)
-
-  function openCreate() { setEditing(null); setFormOpen(true) }
-  function openEdit(p: ProjectWithMetrics) { setEditing(p); setFormOpen(true) }
+  const navigate = useNavigate()
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-slate-500">{data ? `${data.length} active project${data.length === 1 ? '' : 's'}` : '\u00A0'}</p>
-        <button onClick={openCreate} className="flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-medium text-white hover:bg-slate-700">
+        <button onClick={() => setFormOpen(true)} className="flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-medium text-white hover:bg-slate-700">
           <Plus className="h-4 w-4" /> Add project
         </button>
       </div>
@@ -84,11 +82,11 @@ export default function ProjectsPage() {
 
       {data && data.length > 0 && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {data.map((p) => <Card key={p.id} p={p} onEdit={() => openEdit(p)} />)}
+          {data.map((p) => <Card key={p.id} p={p} onOpen={() => navigate(`/projects/${p.id}`)} />)}
         </div>
       )}
 
-      {formOpen && <ProjectForm project={editing} onClose={() => setFormOpen(false)} />}
+      {formOpen && <ProjectForm project={null} onClose={() => setFormOpen(false)} />}
     </div>
   )
 }

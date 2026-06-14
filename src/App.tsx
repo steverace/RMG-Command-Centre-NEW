@@ -5,6 +5,7 @@ import { navItems, settingsItem } from '@/lib/nav'
 import { AuthProvider, useAuth } from '@/auth/AuthProvider'
 import Login from '@/auth/Login'
 import ProjectsPage from '@/features/projects/ProjectsPage'
+import ProjectDetail from '@/features/projects/ProjectDetail'
 
 const messages: Record<string, string> = {
   '/': 'Your daily command view is being built. Soon this shows your Top 3, the five action signals, money owed and recurring revenue.',
@@ -37,6 +38,7 @@ function Guarded() {
     <AppShell>
       <Routes>
         <Route path="/projects" element={<ProjectsPage />} />
+        <Route path="/projects/:id" element={<ProjectDetail />} />
         {placeholders.map((n) => (
           <Route
             key={n.to}

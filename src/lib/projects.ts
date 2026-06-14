@@ -9,8 +9,8 @@ export type ProjectInput = {
   start_date: string | null
   due_date: string | null
   project_value: number | null
-  amount_charged: number | null
-  amount_paid: number | null
+  amount_charged: number
+  amount_paid: number
   payment_status: Project['payment_status']
   next_action: string | null
   ai_can_help: boolean
@@ -28,6 +28,17 @@ export async function listProjects(): Promise<ProjectWithMetrics[]> {
     ((metricsRes.data ?? []) as ProjectMetrics[]).map((m) => [m.project_id, m]),
   )
   return ((projectsRes.data ?? []) as Project[]).map((p) => ({ ...p, metrics: byId.get(p.id) ?? null }))
+}
+
+export async function getProjectWithMetrics(id: string): Promise<ProjectWithMetrics | null> {
+  const [projectRes, metricsRes] = await Promise.all([
+    supabase.from('projects').select('*').eq('id', id).is('deleted_at', null).maybeSingle(),
+    supabase.from('v_project_metrics').select('*').eq('project_id', id).maybeSingle(),
+  ])
+  if (projectRes.error) throw projectRes.error
+  if (metricsRes.error) throw metricsRes.error
+  if (!projectRes.data) return null
+  return { ...(projectRes.data as Project), metrics: (metricsRes.data as ProjectMetrics) ?? null }
 }
 
 export async function createProject(input: ProjectInput): Promise<void> {
