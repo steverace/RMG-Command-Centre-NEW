@@ -4,10 +4,10 @@ import EmptyState from '@/components/EmptyState'
 import { navItems, settingsItem } from '@/lib/nav'
 import { AuthProvider, useAuth } from '@/auth/AuthProvider'
 import Login from '@/auth/Login'
+import ProjectsPage from '@/features/projects/ProjectsPage'
 
 const messages: Record<string, string> = {
   '/': 'Your daily command view is being built. Soon this shows your Top 3, the five action signals, money owed and recurring revenue.',
-  '/projects': 'Projects, checklists and the calculated progress engine arrive next.',
   '/tasks': 'Standalone and project tasks, with AI-ready, manual, waiting and avoided queues, arrive soon.',
   '/ideas': 'The opportunity-ranked idea store arrives soon.',
   '/clients': 'Client records, linked projects and secure reference fields arrive soon.',
@@ -32,11 +32,12 @@ function Guarded() {
   if (loading) return <Loader />
   if (!session) return <Login />
 
-  const all = [...navItems, settingsItem]
+  const placeholders = [...navItems, settingsItem].filter((n) => n.to !== '/projects')
   return (
     <AppShell>
       <Routes>
-        {all.map((n) => (
+        <Route path="/projects" element={<ProjectsPage />} />
+        {placeholders.map((n) => (
           <Route
             key={n.to}
             path={n.to}
