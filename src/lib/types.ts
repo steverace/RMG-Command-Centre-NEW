@@ -88,3 +88,32 @@ export function humanise(value: string): string {
 }
 
 export const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })
+
+export const TASK_ENERGIES = ['quick','deep_work','admin','annoying','client_chasing'] as const
+export type TaskEnergy = (typeof TASK_ENERGIES)[number]
+
+export const WAITING_ON_TYPES = ['client_feedback','payment','supplier','indexing','third_party_approval','other'] as const
+export type WaitingOnType = (typeof WAITING_ON_TYPES)[number]
+
+export type Task = {
+  id: string
+  title: string
+  project_id: string | null
+  client_id: string | null
+  status: ItemStatus
+  priority: Priority
+  due_date: string | null
+  energy: TaskEnergy | null
+  can_be_done_by_ai: boolean
+  requires_manual: boolean
+  blocked: boolean
+  notes: string | null
+  waiting_on_type: WaitingOnType | null
+  waiting_on_person: string | null
+  waiting_since: string | null
+  avoidance_level: number | null
+  completed_at: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}

@@ -4,15 +4,15 @@ import EmptyState from '@/components/EmptyState'
 import { navItems, settingsItem } from '@/lib/nav'
 import { AuthProvider, useAuth } from '@/auth/AuthProvider'
 import Login from '@/auth/Login'
+import Dashboard from '@/features/dashboard/Dashboard'
 import ProjectsPage from '@/features/projects/ProjectsPage'
 import ProjectDetail from '@/features/projects/ProjectDetail'
+import TasksPage from '@/features/tasks/TasksPage'
 
 const messages: Record<string, string> = {
-  '/': 'Your daily command view is being built. Soon this shows your Top 3, the five action signals, money owed and recurring revenue.',
-  '/tasks': 'Standalone and project tasks, with AI-ready, manual, waiting and avoided queues, arrive soon.',
-  '/ideas': 'The opportunity-ranked idea store arrives soon.',
-  '/clients': 'Client records, linked projects and secure reference fields arrive soon.',
-  '/money': 'Money owed, outstanding invoices and recurring revenue arrive soon.',
+  '/ideas': 'The opportunity-ranked idea store arrives next.',
+  '/clients': 'Client records, linked projects and secure reference fields arrive next.',
+  '/money': 'Money owed, outstanding invoices and recurring revenue arrive next.',
   '/review': 'The weekly review screen arrives soon.',
   '/settings': 'Thresholds, account, Obsidian vault and data export arrive soon.',
 }
@@ -33,18 +33,16 @@ function Guarded() {
   if (loading) return <Loader />
   if (!session) return <Login />
 
-  const placeholders = [...navItems, settingsItem].filter((n) => n.to !== '/projects')
+  const placeholders = [...navItems, settingsItem].filter((n) => !['/', '/projects', '/tasks'].includes(n.to))
   return (
     <AppShell>
       <Routes>
+        <Route path="/" element={<Dashboard />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:id" element={<ProjectDetail />} />
+        <Route path="/tasks" element={<TasksPage />} />
         {placeholders.map((n) => (
-          <Route
-            key={n.to}
-            path={n.to}
-            element={<EmptyState icon={n.icon} title={n.label} note={messages[n.to] ?? 'Coming soon.'} />}
-          />
+          <Route key={n.to} path={n.to} element={<EmptyState icon={n.icon} title={n.label} note={messages[n.to] ?? 'Coming soon.'} />} />
         ))}
         <Route path="*" element={<EmptyState icon={navItems[0].icon} title="Not found" note="That screen does not exist yet." />} />
       </Routes>
