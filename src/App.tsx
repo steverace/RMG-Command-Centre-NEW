@@ -12,14 +12,11 @@ import ClientsPage from '@/features/clients/ClientsPage'
 import ClientDetail from '@/features/clients/ClientDetail'
 import MoneyPage from '@/features/money/MoneyPage'
 import QuotesPage from '@/features/quotes/QuotesPage'
+import IdeasPage from '@/features/ideas/IdeasPage'
+import WeeklyReview from '@/features/review/WeeklyReview'
+import SettingsPage from '@/features/settings/SettingsPage'
 
-const messages: Record<string, string> = {
-  '/ideas': 'The opportunity-ranked idea store arrives next.',
-  '/review': 'The weekly review screen arrives soon.',
-  '/settings': 'Thresholds, account, Obsidian vault and data export arrive soon.',
-}
-
-const BUILT = ['/', '/projects', '/tasks', '/clients', '/money', '/quotes']
+const BUILT = ['/', '/projects', '/tasks', '/clients', '/money', '/quotes', '/ideas', '/review', '/settings']
 
 function Loader() {
   return (
@@ -49,8 +46,11 @@ function Guarded() {
         <Route path="/clients/:id" element={<ClientDetail />} />
         <Route path="/money" element={<MoneyPage />} />
         <Route path="/quotes" element={<QuotesPage />} />
+        <Route path="/ideas" element={<IdeasPage />} />
+        <Route path="/review" element={<WeeklyReview />} />
+        <Route path="/settings" element={<SettingsPage />} />
         {placeholders.map((n) => (
-          <Route key={n.to} path={n.to} element={<EmptyState icon={n.icon} title={n.label} note={messages[n.to] ?? 'Coming soon.'} />} />
+          <Route key={n.to} path={n.to} element={<EmptyState icon={n.icon} title={n.label} note="Coming soon." />} />
         ))}
         <Route path="*" element={<EmptyState icon={navItems[0].icon} title="Not found" note="That screen does not exist yet." />} />
       </Routes>

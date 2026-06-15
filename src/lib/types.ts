@@ -188,3 +188,39 @@ export function monthlyEquivalent(r: { amount: number; billing_cycle: BillingCyc
 }
 
 export const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })
+
+export const IDEA_STATUSES = ['captured','researching','approved','rejected','parked'] as const
+export type IdeaStatus = (typeof IDEA_STATUSES)[number]
+
+export const CONFIDENCE_LEVELS = ['low','medium','high'] as const
+export type ConfidenceLevel = (typeof CONFIDENCE_LEVELS)[number]
+
+export type Idea = {
+  id: string
+  name: string
+  description: string | null
+  category: string | null
+  why_it_might_work: string | null
+  evidence: string | null
+  next_research_step: string | null
+  revenue_potential: number | null
+  time_to_revenue: number | null
+  difficulty: number | null
+  excitement: number | null
+  expected_monthly_revenue: number | null
+  revenue_confidence: ConfidenceLevel | null
+  status: IdeaStatus
+  converted_project_id: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type IdeaWithScore = Idea & { opportunity_score: number | null }
+
+// Mirrors the v_idea_scores SQL view exactly, for live preview in the form.
+export function opportunityScore(i: { revenue_potential: number | null; time_to_revenue: number | null; difficulty: number | null; excitement: number | null }): number | null {
+  const { revenue_potential: r, time_to_revenue: t, difficulty: d, excitement: e } = i
+  if (r == null || t == null || d == null || e == null) return null
+  return Math.round(((r * 3 + t * 2 + (6 - d) * 2 + e * 1 - 8) / 32) * 100)
+}
