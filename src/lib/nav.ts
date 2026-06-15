@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, FolderKanban, ListChecks, Lightbulb,
-  Users, PoundSterling, CalendarCheck, Settings,
+  Users, PoundSterling, FileText, CalendarCheck, Settings,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -9,16 +9,17 @@ export type NavItem = {
   label: string
   short: string
   icon: LucideIcon
-  primary?: boolean // shown in mobile bottom bar
+  primary?: boolean
 }
 
 export const navItems: NavItem[] = [
   { to: '/', label: 'Control Deck', short: 'Deck', icon: LayoutDashboard, primary: true },
   { to: '/projects', label: 'Projects', short: 'Projects', icon: FolderKanban, primary: true },
   { to: '/tasks', label: 'Tasks', short: 'Tasks', icon: ListChecks, primary: true },
-  { to: '/ideas', label: 'Ideas', short: 'Ideas', icon: Lightbulb, primary: true },
+  { to: '/ideas', label: 'Ideas', short: 'Ideas', icon: Lightbulb },
   { to: '/clients', label: 'Clients', short: 'Clients', icon: Users },
   { to: '/money', label: 'Money', short: 'Money', icon: PoundSterling, primary: true },
+  { to: '/quotes', label: 'Quotes', short: 'Quotes', icon: FileText, primary: true },
   { to: '/review', label: 'Weekly Review', short: 'Review', icon: CalendarCheck },
 ]
 

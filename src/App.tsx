@@ -8,14 +8,18 @@ import Dashboard from '@/features/dashboard/Dashboard'
 import ProjectsPage from '@/features/projects/ProjectsPage'
 import ProjectDetail from '@/features/projects/ProjectDetail'
 import TasksPage from '@/features/tasks/TasksPage'
+import ClientsPage from '@/features/clients/ClientsPage'
+import ClientDetail from '@/features/clients/ClientDetail'
+import MoneyPage from '@/features/money/MoneyPage'
+import QuotesPage from '@/features/quotes/QuotesPage'
 
 const messages: Record<string, string> = {
   '/ideas': 'The opportunity-ranked idea store arrives next.',
-  '/clients': 'Client records, linked projects and secure reference fields arrive next.',
-  '/money': 'Money owed, outstanding invoices and recurring revenue arrive next.',
   '/review': 'The weekly review screen arrives soon.',
   '/settings': 'Thresholds, account, Obsidian vault and data export arrive soon.',
 }
+
+const BUILT = ['/', '/projects', '/tasks', '/clients', '/money', '/quotes']
 
 function Loader() {
   return (
@@ -33,7 +37,7 @@ function Guarded() {
   if (loading) return <Loader />
   if (!session) return <Login />
 
-  const placeholders = [...navItems, settingsItem].filter((n) => !['/', '/projects', '/tasks'].includes(n.to))
+  const placeholders = [...navItems, settingsItem].filter((n) => !BUILT.includes(n.to))
   return (
     <AppShell>
       <Routes>
@@ -41,6 +45,10 @@ function Guarded() {
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:id" element={<ProjectDetail />} />
         <Route path="/tasks" element={<TasksPage />} />
+        <Route path="/clients" element={<ClientsPage />} />
+        <Route path="/clients/:id" element={<ClientDetail />} />
+        <Route path="/money" element={<MoneyPage />} />
+        <Route path="/quotes" element={<QuotesPage />} />
         {placeholders.map((n) => (
           <Route key={n.to} path={n.to} element={<EmptyState icon={n.icon} title={n.label} note={messages[n.to] ?? 'Coming soon.'} />} />
         ))}

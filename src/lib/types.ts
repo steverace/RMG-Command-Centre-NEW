@@ -3,7 +3,6 @@ export type ProjectType = (typeof PROJECT_TYPES)[number]
 
 export const PROJECT_STATUSES = ['idea','not_started','active','paused','waiting','completed','abandoned'] as const
 export type ProjectStatus = (typeof PROJECT_STATUSES)[number]
-// 'idea' lives in the Ideas area, not on projects — so it is never offered when creating/editing a project.
 export const SELECTABLE_PROJECT_STATUSES = PROJECT_STATUSES.filter((s) => s !== 'idea')
 
 export const PRIORITIES = ['low','medium','high','urgent'] as const
@@ -14,6 +13,21 @@ export type PaymentStatus = (typeof PAYMENT_STATUSES)[number]
 
 export const ITEM_STATUSES = ['not_started','in_progress','blocked','complete'] as const
 export type ItemStatus = (typeof ITEM_STATUSES)[number]
+
+export const TASK_ENERGIES = ['quick','deep_work','admin','annoying','client_chasing'] as const
+export type TaskEnergy = (typeof TASK_ENERGIES)[number]
+
+export const WAITING_ON_TYPES = ['client_feedback','payment','supplier','indexing','third_party_approval','other'] as const
+export type WaitingOnType = (typeof WAITING_ON_TYPES)[number]
+
+export const RECURRING_CATEGORIES = ['hosting','domain','seo_retainer','affiliate','directory','other_recurring'] as const
+export type RecurringCategory = (typeof RECURRING_CATEGORIES)[number]
+
+export const BILLING_CYCLES = ['monthly','quarterly','annual','one_off'] as const
+export type BillingCycle = (typeof BILLING_CYCLES)[number]
+
+export const QUOTE_STATUSES = ['to_send','sent','accepted','declined','expired'] as const
+export type QuoteStatus = (typeof QUOTE_STATUSES)[number]
 
 export type Project = {
   id: string
@@ -83,18 +97,6 @@ export type ProjectMetrics = {
 
 export type ProjectWithMetrics = Project & { metrics: ProjectMetrics | null }
 
-export function humanise(value: string): string {
-  return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-}
-
-export const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })
-
-export const TASK_ENERGIES = ['quick','deep_work','admin','annoying','client_chasing'] as const
-export type TaskEnergy = (typeof TASK_ENERGIES)[number]
-
-export const WAITING_ON_TYPES = ['client_feedback','payment','supplier','indexing','third_party_approval','other'] as const
-export type WaitingOnType = (typeof WAITING_ON_TYPES)[number]
-
 export type Task = {
   id: string
   title: string
@@ -117,3 +119,72 @@ export type Task = {
   updated_at: string
   deleted_at: string | null
 }
+
+export type SecureRef = { label: string; location: string }
+
+export type Client = {
+  id: string
+  name: string | null
+  business_name: string | null
+  email: string | null
+  phone: string | null
+  address: string | null
+  website: string | null
+  notes: string | null
+  secure_refs: SecureRef[]
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type RecurringRevenue = {
+  id: string
+  label: string
+  category: RecurringCategory
+  amount: number
+  billing_cycle: BillingCycle
+  next_due_date: string | null
+  active: boolean
+  project_id: string | null
+  client_id: string | null
+  started_on: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type Quote = {
+  id: string
+  client_id: string | null
+  title: string
+  prospect_name: string | null
+  amount: number | null
+  status: QuoteStatus
+  sent_on: string | null
+  follow_up_date: string | null
+  notes: string | null
+  converted_project_id: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export function humanise(value: string): string {
+  return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+export function clientDisplayName(c: { business_name: string | null; name: string | null }): string {
+  return (c.business_name?.trim() || c.name?.trim() || 'Unnamed client')
+}
+
+export function monthlyEquivalent(r: { amount: number; billing_cycle: BillingCycle }): number {
+  switch (r.billing_cycle) {
+    case 'monthly': return r.amount
+    case 'quarterly': return r.amount / 3
+    case 'annual': return r.amount / 12
+    default: return 0
+  }
+}
+
+export const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 })
