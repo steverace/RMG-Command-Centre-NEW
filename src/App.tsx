@@ -18,8 +18,9 @@ import SettingsPage from '@/features/settings/SettingsPage'
 import VoiceAgentPage from '@/features/voice/VoiceAgentPage'
 import CalendarPage from '@/features/calendar/CalendarPage'
 import AIAccessPage from '@/features/integrations/AIAccessPage'
+import NotificationsPage from '@/features/notifications/NotificationsPage'
 
-const BUILT = ['/', '/projects', '/tasks', '/clients', '/money', '/quotes', '/ideas', '/calendar', '/voice', '/ai-access', '/review', '/settings']
+const BUILT = ['/', '/projects', '/tasks', '/clients', '/money', '/quotes', '/ideas', '/calendar', '/notifications', '/voice', '/ai-access', '/review', '/settings']
 
 function Loader() {
   return (
@@ -51,6 +52,7 @@ function Guarded() {
         <Route path="/quotes" element={<QuotesPage />} />
         <Route path="/ideas" element={<IdeasPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/voice" element={<VoiceAgentPage />} />
         <Route path="/ai-access" element={<AIAccessPage />} />
         <Route path="/review" element={<WeeklyReview />} />
