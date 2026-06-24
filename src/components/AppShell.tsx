@@ -4,6 +4,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { Plus, LogOut, Menu, X } from 'lucide-react'
 import { navItems, settingsItem } from '@/lib/nav'
 import { useAuth } from '@/auth/AuthProvider'
+import QuickAdd from '@/components/QuickAdd'
 
 function currentTitle(pathname: string): string {
   const all = [...navItems, settingsItem]
@@ -47,6 +48,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation()
   const { session, signOut } = useAuth()
   const [drawer, setDrawer] = useState(false)
+  const [quickAdd, setQuickAdd] = useState(false)
   const title = currentTitle(pathname)
   const email = session?.user?.email ?? ''
   const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -96,7 +98,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <button onClick={() => setDrawer(true)} className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-300" aria-label="Menu"><Menu className="h-5 w-5" /></button>
             <span className="font-display text-sm font-bold tracking-wide text-slate-100">{title}</span>
           </div>
-          <button className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-700 text-white" aria-label="Quick add"><Plus className="h-5 w-5" /></button>
+          <button onClick={() => setQuickAdd(true)} className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-700 text-white" aria-label="Quick add"><Plus className="h-5 w-5" /></button>
         </header>
 
         {/* Desktop top bar */}
@@ -105,7 +107,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
             <h1 className="font-display text-lg font-semibold text-slate-900">{title}</h1>
             <p className="text-xs text-slate-400">{today}</p>
           </div>
-          <button className="flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700"><Plus className="h-4 w-4" /> Quick add</button>
+          <button onClick={() => setQuickAdd(true)} className="flex items-center gap-2 rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700"><Plus className="h-4 w-4" /> Quick add</button>
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 pb-24 md:p-6 md:pb-6">{children}</main>
@@ -124,6 +126,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
       </div>
+      {quickAdd && <QuickAdd onClose={() => setQuickAdd(false)} />}
     </div>
   )
 }
