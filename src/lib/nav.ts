@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, FolderKanban, ListChecks, Lightbulb,
-  Users, PoundSterling, FileText, CalendarCheck, Settings, Bot,
+  Users, PoundSterling, FileText, CalendarCheck, Settings, Bot, CalendarDays, Plug,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -20,7 +20,9 @@ export const navItems: NavItem[] = [
   { to: '/clients', label: 'Clients', short: 'Clients', icon: Users },
   { to: '/money', label: 'Money', short: 'Money', icon: PoundSterling, primary: true },
   { to: '/quotes', label: 'Quotes', short: 'Quotes', icon: FileText, primary: true },
+  { to: '/calendar', label: 'Calendar', short: 'Calendar', icon: CalendarDays },
   { to: '/voice', label: 'Voice Agent', short: 'Voice', icon: Bot },
+  { to: '/ai-access', label: 'AI Access', short: 'AI', icon: Plug },
   { to: '/review', label: 'Weekly Review', short: 'Review', icon: CalendarCheck },
 ]
 

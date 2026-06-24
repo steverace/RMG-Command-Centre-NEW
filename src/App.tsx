@@ -16,8 +16,10 @@ import IdeasPage from '@/features/ideas/IdeasPage'
 import WeeklyReview from '@/features/review/WeeklyReview'
 import SettingsPage from '@/features/settings/SettingsPage'
 import VoiceAgentPage from '@/features/voice/VoiceAgentPage'
+import CalendarPage from '@/features/calendar/CalendarPage'
+import AIAccessPage from '@/features/integrations/AIAccessPage'
 
-const BUILT = ['/', '/projects', '/tasks', '/clients', '/money', '/quotes', '/ideas', '/voice', '/review', '/settings']
+const BUILT = ['/', '/projects', '/tasks', '/clients', '/money', '/quotes', '/ideas', '/calendar', '/voice', '/ai-access', '/review', '/settings']
 
 function Loader() {
   return (
@@ -48,7 +50,9 @@ function Guarded() {
         <Route path="/money" element={<MoneyPage />} />
         <Route path="/quotes" element={<QuotesPage />} />
         <Route path="/ideas" element={<IdeasPage />} />
+        <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/voice" element={<VoiceAgentPage />} />
+        <Route path="/ai-access" element={<AIAccessPage />} />
         <Route path="/review" element={<WeeklyReview />} />
         <Route path="/settings" element={<SettingsPage />} />
         {placeholders.map((n) => (
