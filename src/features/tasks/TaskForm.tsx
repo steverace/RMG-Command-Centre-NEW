@@ -12,7 +12,7 @@ import { useProjects } from '@/features/projects/useProjects'
 const labelCls = 'mb-1 block text-xs font-medium text-slate-500'
 const inputCls = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500'
 
-export default function TaskForm({ task, onClose }: { task: Task | null; onClose: () => void }) {
+export default function TaskForm({ task, onClose, defaultProjectId = '' }: { task: Task | null; onClose: () => void; defaultProjectId?: string }) {
   const create = useCreateTask()
   const update = useUpdateTask()
   const archive = useArchiveTask()
@@ -20,7 +20,7 @@ export default function TaskForm({ task, onClose }: { task: Task | null; onClose
   const editing = !!task
 
   const [title, setTitle] = useState(task?.title ?? '')
-  const [projectId, setProjectId] = useState(task?.project_id ?? '')
+  const [projectId, setProjectId] = useState(task?.project_id ?? defaultProjectId)
   const [status, setStatus] = useState(task?.status ?? 'not_started')
   const [priority, setPriority] = useState(task?.priority ?? 'medium')
   const [dueDate, setDueDate] = useState(task?.due_date ?? '')
@@ -69,7 +69,7 @@ export default function TaskForm({ task, onClose }: { task: Task | null; onClose
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 p-4 backdrop-blur-sm">
       <form onSubmit={submit} className="my-6 w-full max-w-lg rounded-2xl border border-slate-200 bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-          <h2 className="font-display text-base font-semibold text-slate-900">{editing ? 'Edit task' : 'New task'}</h2>
+          <h2 className="font-display text-base font-semibold text-slate-900">{editing ? 'Edit task' : defaultProjectId ? 'New project task' : 'New task'}</h2>
           <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-700" aria-label="Close"><X className="h-5 w-5" /></button>
         </div>
 

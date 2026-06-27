@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Plus, ListChecks, Bot, Wrench, Hourglass } from 'lucide-react'
 import { useTasks, useSetTaskStatus } from '@/features/tasks/useTasks'
 import { useProjects } from '@/features/projects/useProjects'
@@ -35,7 +36,15 @@ function Row({ task, projectName, onEdit }: { task: Task; projectName?: string; 
       <button onClick={onEdit} className="min-w-0 flex-1 text-left">
         <div className={`text-sm ${complete ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{task.title}</div>
         <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
-          {projectName && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-500">{projectName}</span>}
+          {projectName && task.project_id && (
+            <Link
+              to={`/projects/${task.project_id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+            >
+              {projectName}
+            </Link>
+          )}
           {task.due_date && <span className={overdue ? 'ff-mono text-rose-600' : 'ff-mono'}>{task.due_date}</span>}
           {task.energy && <span>{humanise(task.energy)}</span>}
           {taskWaiting(task) && <span className="flex items-center gap-1 text-slate-500"><Hourglass className="h-3 w-3" /> {humanise(task.waiting_on_type!)}{task.waiting_on_person ? ` · ${task.waiting_on_person}` : ''}</span>}
