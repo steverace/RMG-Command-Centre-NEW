@@ -52,6 +52,11 @@ function Row({ task, projectName, onEdit }: { task: Task; projectName?: string; 
           {task.requires_manual && <Wrench className="h-3.5 w-3.5 text-slate-400" />}
           {(task.avoidance_level ?? 0) >= 4 && <span className="text-amber-600">avoiding</span>}
         </div>
+        {task.notes && (
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
+            {task.notes}
+          </p>
+        )}
       </button>
     </div>
   )

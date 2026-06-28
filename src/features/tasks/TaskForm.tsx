@@ -25,6 +25,7 @@ export default function TaskForm({ task, onClose, defaultProjectId = '' }: { tas
   const [priority, setPriority] = useState(task?.priority ?? 'medium')
   const [dueDate, setDueDate] = useState(task?.due_date ?? '')
   const [energy, setEnergy] = useState<string>(task?.energy ?? '')
+  const [notes, setNotes] = useState(task?.notes ?? '')
   const [waitingType, setWaitingType] = useState<string>(task?.waiting_on_type ?? '')
   const [waitingPerson, setWaitingPerson] = useState(task?.waiting_on_person ?? '')
   const [avoidance, setAvoidance] = useState<string>(task?.avoidance_level?.toString() ?? '')
@@ -43,6 +44,7 @@ export default function TaskForm({ task, onClose, defaultProjectId = '' }: { tas
       status, priority,
       due_date: dueDate || null,
       energy: (energy || null) as TaskInput['energy'],
+      notes: notes.trim() || null,
       can_be_done_by_ai: aiCanDo,
       requires_manual: manual,
       waiting_on_type: (waitingType || null) as TaskInput['waiting_on_type'],
@@ -85,6 +87,19 @@ export default function TaskForm({ task, onClose, defaultProjectId = '' }: { tas
               <option value="">— Standalone (no project) —</option>
               {(projects ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
+          </div>
+
+          <div>
+            <label className={labelCls} htmlFor="t-notes">Context / AI prompt <span className="text-slate-300">(optional)</span></label>
+            <textarea
+              id="t-notes"
+              rows={4}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className={inputCls}
+              placeholder="Add background, links, constraints, or the exact prompt an AI model should use later."
+            />
+            <p className="mt-1 text-[11px] leading-4 text-slate-400">Useful when the title is too vague, or when this should become an AI-ready task later.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -136,7 +151,7 @@ export default function TaskForm({ task, onClose, defaultProjectId = '' }: { tas
 
           <div className="flex gap-5">
             <label className="flex items-center gap-2 text-sm text-slate-600">
-              <input type="checkbox" checked={aiCanDo} onChange={(e) => setAiCanDo(e.target.checked)} className="h-4 w-4 rounded border-slate-300" /> AI can do
+              <input type="checkbox" checked={aiCanDo} onChange={(e) => setAiCanDo(e.target.checked)} className="h-4 w-4 rounded border-slate-300" /> AI-ready
             </label>
             <label className="flex items-center gap-2 text-sm text-slate-600">
               <input type="checkbox" checked={manual} onChange={(e) => setManual(e.target.checked)} className="h-4 w-4 rounded border-slate-300" /> Manual action needed

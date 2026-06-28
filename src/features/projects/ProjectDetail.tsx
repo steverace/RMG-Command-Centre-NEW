@@ -87,6 +87,11 @@ function ProjectTaskRow({ task, onEdit }: { task: Task; onEdit: () => void }) {
           {task.can_be_done_by_ai && <Bot className="h-3.5 w-3.5 text-indigo-400" />}
           {task.requires_manual && <Wrench className="h-3.5 w-3.5 text-slate-400" />}
         </div>
+        {task.notes && (
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
+            {task.notes}
+          </p>
+        )}
       </button>
     </div>
   )

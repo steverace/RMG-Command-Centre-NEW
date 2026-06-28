@@ -90,7 +90,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
   if (name === 'get_focus_summary') {
     const [projects, tasks, metrics] = await Promise.all([
       supabaseGet(env, 'projects', 'select=id,name,status,priority,due_date,next_action,payment_status,amount_charged,amount_paid&deleted_at=is.null&order=updated_at.desc&limit=30'),
-      supabaseGet(env, 'tasks', 'select=id,title,status,priority,due_date,blocked,waiting_on_type&deleted_at=is.null&status=neq.complete&order=updated_at.desc&limit=30'),
+      supabaseGet(env, 'tasks', 'select=id,title,project_id,status,priority,due_date,energy,notes,can_be_done_by_ai,requires_manual,blocked,waiting_on_type&deleted_at=is.null&status=neq.complete&order=updated_at.desc&limit=30'),
       supabaseGet(env, 'v_project_metrics', 'select=*'),
     ])
     return textResult({ projects, tasks, metrics })

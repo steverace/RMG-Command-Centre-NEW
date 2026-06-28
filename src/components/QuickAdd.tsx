@@ -46,6 +46,7 @@ export default function QuickAdd({ onClose }: { onClose: () => void }) {
           priority: 'medium',
           due_date: null,
           energy: null,
+          notes: details || null,
           can_be_done_by_ai: false,
           requires_manual: true,
           waiting_on_type: null,
@@ -153,9 +154,16 @@ export default function QuickAdd({ onClose }: { onClose: () => void }) {
 
           <div>
             <label className="mb-1 block text-xs font-medium text-slate-500" htmlFor="qa-note">
-              {mode === 'task' ? 'Note' : mode === 'project' ? 'Next action' : 'Description'} <span className="text-slate-300">(optional)</span>
+              {mode === 'task' ? 'Context / AI prompt' : mode === 'project' ? 'Next action' : 'Description'} <span className="text-slate-300">(optional)</span>
             </label>
-            <textarea id="qa-note" rows={3} value={note} onChange={(e) => setNote(e.target.value)} className={inputCls} />
+            <textarea
+              id="qa-note"
+              rows={3}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className={inputCls}
+              placeholder={mode === 'task' ? 'Add context, links, constraints, or the future AI prompt.' : undefined}
+            />
           </div>
 
           {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p>}

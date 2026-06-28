@@ -8,6 +8,7 @@ export type TaskInput = {
   priority: Task['priority']
   due_date: string | null
   energy: Task['energy']
+  notes: string | null
   can_be_done_by_ai: boolean
   requires_manual: boolean
   waiting_on_type: Task['waiting_on_type']
