@@ -34,6 +34,17 @@ export default function TaskForm({ task, onClose, defaultProjectId = '' }: { tas
   const [error, setError] = useState<string | null>(null)
 
   const busy = create.isPending || update.isPending || archive.isPending
+  const readyForAi = aiCanDo && !manual
+
+  function setReadyForAi(checked: boolean) {
+    setAiCanDo(checked)
+    if (checked) {
+      setManual(false)
+      setWaitingType('')
+      setWaitingPerson('')
+      if (status === 'blocked') setStatus('not_started')
+    }
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -99,7 +110,7 @@ export default function TaskForm({ task, onClose, defaultProjectId = '' }: { tas
               className={inputCls}
               placeholder="Add background, links, constraints, or the exact prompt an AI model should use later."
             />
-            <p className="mt-1 text-[11px] leading-4 text-slate-400">Useful when the title is too vague, or when this should become an AI-ready task later.</p>
+            <p className="mt-1 text-[11px] leading-4 text-slate-400">Useful when the title is too vague, or when this should become something an AI can complete later.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -151,10 +162,10 @@ export default function TaskForm({ task, onClose, defaultProjectId = '' }: { tas
 
           <div className="flex gap-5">
             <label className="flex items-center gap-2 text-sm text-slate-600">
-              <input type="checkbox" checked={aiCanDo} onChange={(e) => setAiCanDo(e.target.checked)} className="h-4 w-4 rounded border-slate-300" /> AI-ready
+              <input type="checkbox" checked={readyForAi} onChange={(e) => setReadyForAi(e.target.checked)} className="h-4 w-4 rounded border-slate-300" /> Ready for AI to complete
             </label>
             <label className="flex items-center gap-2 text-sm text-slate-600">
-              <input type="checkbox" checked={manual} onChange={(e) => setManual(e.target.checked)} className="h-4 w-4 rounded border-slate-300" /> Manual action needed
+              <input type="checkbox" checked={manual} onChange={(e) => { setManual(e.target.checked); if (e.target.checked) setAiCanDo(false) }} className="h-4 w-4 rounded border-slate-300" /> Steve/manual input needed
             </label>
           </div>
 

@@ -20,13 +20,18 @@ Authorization: Bearer <RMCC_MCP_TOKEN>
 
 The older `SUPABASE_SERVICE_ROLE_KEY` name also works for legacy Supabase projects, but new Supabase projects should use a secret key from the Secret keys section.
 
-## First tools
+## Tools
 
 - `get_focus_summary`
 - `list_projects`
 - `list_tasks`
+- `list_ai_ready_tasks`
+- `create_task`
+- `update_task`
+- `mark_task_needs_steve`
+- `mark_task_complete_for_review`
 
-These are read-only starter tools. Write tools should be added only after this connection is proven stable.
+The task write tools are intentionally narrow. They can create and update tasks, move a task into Steve input needed, or mark an AI-completed task for Steve review.
 
 ## Client endpoint
 

@@ -182,7 +182,7 @@ export default function Dashboard() {
       )}
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
-        <QueueCard icon={<Bot className="h-4 w-4 text-indigo-500" />} title="AI-ready" items={d.aiReady.map((t) => t.title)} dot="bg-indigo-400" empty="No AI-ready tasks" />
+        <QueueCard icon={<Bot className="h-4 w-4 text-indigo-500" />} title="Ready for AI" items={d.aiReady.map((t) => t.title)} dot="bg-indigo-400" empty="No tasks ready for AI" />
         <QueueCard icon={<Wrench className="h-4 w-4 text-slate-400" />} title="Manual only" items={d.manual.map((t) => t.title)} dot="bg-slate-400" empty="No manual tasks" />
         <QueueCard icon={<AlarmClock className="h-4 w-4 text-amber-500" />} title="You've been avoiding" items={d.avoided.map((t) => t.title)} dot="bg-amber-500" empty="Nothing flagged" />
         <QueueCard icon={<Hourglass className="h-4 w-4 text-slate-400" />} title="Waiting on" items={d.waiting} dot="bg-slate-300" empty="Nothing waiting" />

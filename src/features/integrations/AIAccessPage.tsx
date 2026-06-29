@@ -85,7 +85,7 @@ export default function AIAccessPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           <Plug className="mb-3 h-5 w-5 text-slate-500" />
           <div className="font-display text-sm font-semibold text-slate-900">Supabase bridge</div>
-          <p className="mt-1 text-xs leading-5 text-slate-500">Set SUPABASE_URL and SUPABASE_SECRET_KEY for live Command Centre reads. The older SUPABASE_SERVICE_ROLE_KEY name still works.</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">Set SUPABASE_URL and SUPABASE_SECRET_KEY for live Command Centre reads and task updates. The older SUPABASE_SERVICE_ROLE_KEY name still works.</p>
         </div>
       </div>
     </div>

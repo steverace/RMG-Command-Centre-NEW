@@ -1,19 +1,21 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, ListChecks, Bot, Wrench, Hourglass } from 'lucide-react'
+import { Plus, ListChecks, Bot, Wrench, Hourglass, MessageSquareWarning, ClipboardCheck } from 'lucide-react'
 import { useTasks, useSetTaskStatus } from '@/features/tasks/useTasks'
 import { useProjects } from '@/features/projects/useProjects'
 import TaskForm from '@/features/tasks/TaskForm'
 import EmptyState from '@/components/EmptyState'
 import { ITEM_STATUSES, humanise } from '@/lib/types'
 import type { Task, ItemStatus } from '@/lib/types'
-import { taskOverdue, taskWaiting, taskAiReady, taskManual, taskAvoided } from '@/features/tasks/taskLogic'
+import { taskOverdue, taskWaiting, taskAiReady, taskManual, taskAvoided, taskNeedsSteveInput, taskSteveReview } from '@/features/tasks/taskLogic'
 
-type Filter = 'all' | 'overdue' | 'ai' | 'manual' | 'waiting' | 'avoided'
+type Filter = 'all' | 'overdue' | 'ai' | 'input' | 'review' | 'manual' | 'waiting' | 'avoided'
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'overdue', label: 'Overdue' },
-  { key: 'ai', label: 'AI-ready' },
+  { key: 'ai', label: 'Ready for AI' },
+  { key: 'input', label: 'Steve input' },
+  { key: 'review', label: 'Steve review' },
   { key: 'manual', label: 'Manual' },
   { key: 'waiting', label: 'Waiting on' },
   { key: 'avoided', label: 'Avoiding' },
@@ -48,7 +50,9 @@ function Row({ task, projectName, onEdit }: { task: Task; projectName?: string; 
           {task.due_date && <span className={overdue ? 'ff-mono text-rose-600' : 'ff-mono'}>{task.due_date}</span>}
           {task.energy && <span>{humanise(task.energy)}</span>}
           {taskWaiting(task) && <span className="flex items-center gap-1 text-slate-500"><Hourglass className="h-3 w-3" /> {humanise(task.waiting_on_type!)}{task.waiting_on_person ? ` · ${task.waiting_on_person}` : ''}</span>}
-          {task.can_be_done_by_ai && <Bot className="h-3.5 w-3.5 text-indigo-400" />}
+          {taskAiReady(task) && <span className="inline-flex items-center gap-1 rounded bg-indigo-50 px-1.5 py-0.5 text-indigo-600"><Bot className="h-3 w-3" /> Ready for AI</span>}
+          {taskNeedsSteveInput(task) && <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-1.5 py-0.5 text-amber-700"><MessageSquareWarning className="h-3 w-3" /> Steve input needed</span>}
+          {taskSteveReview(task) && <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-700"><ClipboardCheck className="h-3 w-3" /> Steve review</span>}
           {task.requires_manual && <Wrench className="h-3.5 w-3.5 text-slate-400" />}
           {(task.avoidance_level ?? 0) >= 4 && <span className="text-amber-600">avoiding</span>}
         </div>
@@ -80,6 +84,8 @@ export default function TasksPage() {
     switch (filter) {
       case 'overdue': return all.filter(taskOverdue)
       case 'ai': return all.filter(taskAiReady)
+      case 'input': return all.filter(taskNeedsSteveInput)
+      case 'review': return all.filter(taskSteveReview)
       case 'manual': return all.filter(taskManual)
       case 'waiting': return all.filter(taskWaiting)
       case 'avoided': return all.filter(taskAvoided)
@@ -110,7 +116,7 @@ export default function TasksPage() {
       {isError && <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">Couldn't load tasks: {error instanceof Error ? error.message : 'unknown error'}</div>}
 
       {tasks && tasks.length === 0 && (
-        <EmptyState icon={ListChecks} title="No tasks yet" note="Add tasks, tag them AI-ready or manual, and they'll feed your Control Deck queues." />
+        <EmptyState icon={ListChecks} title="No tasks yet" note="Add tasks, mark the clear ones Ready for AI, and they'll feed your Control Deck queues." />
       )}
 
       {tasks && tasks.length > 0 && (
