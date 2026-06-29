@@ -19,7 +19,7 @@ Set this in Cloudflare Pages:
 The existing server-side variables are also used to store subscriptions:
 
 - `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEY`
 
 Later, the reminder sender will also need:
 

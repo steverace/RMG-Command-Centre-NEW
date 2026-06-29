@@ -1,5 +1,6 @@
 type Env = {
   SUPABASE_URL?: string
+  SUPABASE_SECRET_KEY?: string
   SUPABASE_SERVICE_ROLE_KEY?: string
 }
 
@@ -13,21 +14,24 @@ function json(body: unknown, status = 200) {
 }
 
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+  const apiKey = env.SUPABASE_SECRET_KEY ?? env.SUPABASE_SERVICE_ROLE_KEY
+  if (!env.SUPABASE_URL || !apiKey) {
     return json({ error: 'Push subscription storage is not configured' }, 500)
   }
 
   const subscription = await request.json()
   if (!subscription?.endpoint) return json({ error: 'Missing push endpoint' }, 400)
 
+  const headers: Record<string, string> = {
+    apikey: apiKey,
+    'content-type': 'application/json',
+    prefer: 'resolution=merge-duplicates',
+  }
+  if (!apiKey.startsWith('sb_secret_')) headers.authorization = `Bearer ${apiKey}`
+
   const res = await fetch(`${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/push_subscriptions`, {
     method: 'POST',
-    headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      'content-type': 'application/json',
-      prefer: 'resolution=merge-duplicates',
-    },
+    headers,
     body: JSON.stringify({
       endpoint: subscription.endpoint,
       subscription,

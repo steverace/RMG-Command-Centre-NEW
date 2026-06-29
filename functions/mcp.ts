@@ -1,6 +1,7 @@
 type Env = {
   RMCC_MCP_TOKEN?: string
   SUPABASE_URL?: string
+  SUPABASE_SECRET_KEY?: string
   SUPABASE_SERVICE_ROLE_KEY?: string
 }
 
@@ -58,16 +59,18 @@ function authorised(request: Request, env: Env) {
 }
 
 async function supabaseGet(env: Env, table: string, query: string) {
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are not configured')
+  const apiKey = env.SUPABASE_SECRET_KEY ?? env.SUPABASE_SERVICE_ROLE_KEY
+  if (!env.SUPABASE_URL || !apiKey) {
+    throw new Error('SUPABASE_URL and SUPABASE_SECRET_KEY are not configured')
   }
   const url = `${env.SUPABASE_URL.replace(/\/$/, '')}/rest/v1/${table}?${query}`
+  const headers: Record<string, string> = {
+    apikey: apiKey,
+    accept: 'application/json',
+  }
+  if (!apiKey.startsWith('sb_secret_')) headers.authorization = `Bearer ${apiKey}`
   const res = await fetch(url, {
-    headers: {
-      apikey: env.SUPABASE_SERVICE_ROLE_KEY,
-      authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
-      accept: 'application/json',
-    },
+    headers,
   })
   if (!res.ok) throw new Error(`Supabase ${table} request failed: ${res.status}`)
   return res.json()
@@ -104,7 +107,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => json({
   ok: true,
   name: 'Race Media Command Centre MCP',
   mcp: 'POST JSON-RPC 2.0 requests to this endpoint.',
-  configured: !!(env.RMCC_MCP_TOKEN && env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY),
+  configured: !!(env.RMCC_MCP_TOKEN && env.SUPABASE_URL && (env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY)),
   tools: tools.map((tool) => tool.name),
 })
 

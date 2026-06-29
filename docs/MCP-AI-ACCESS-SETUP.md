@@ -10,13 +10,15 @@ Set these in Cloudflare Pages:
 
 - `RMCC_MCP_TOKEN`
 - `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEY`
 
 `RMCC_MCP_TOKEN` is a private bearer token. AI clients must send:
 
 ```text
 Authorization: Bearer <RMCC_MCP_TOKEN>
 ```
+
+The older `SUPABASE_SERVICE_ROLE_KEY` name also works for legacy Supabase projects, but new Supabase projects should use a secret key from the Secret keys section.
 
 ## First tools
 
