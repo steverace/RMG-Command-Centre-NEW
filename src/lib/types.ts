@@ -23,6 +23,9 @@ export type WaitingOnType = (typeof WAITING_ON_TYPES)[number]
 export const RECURRING_CATEGORIES = ['hosting','domain','seo_retainer','affiliate','directory','other_recurring'] as const
 export type RecurringCategory = (typeof RECURRING_CATEGORIES)[number]
 
+export const OUTGOING_CATEGORIES = ['subscription','hosting','domain','software','ai_tool','bill','finance','tax','other'] as const
+export type OutgoingCategory = (typeof OUTGOING_CATEGORIES)[number]
+
 export const BILLING_CYCLES = ['weekly','monthly','quarterly','annual','one_off'] as const
 export type BillingCycle = (typeof BILLING_CYCLES)[number]
 
@@ -148,6 +151,24 @@ export type RecurringRevenue = {
   project_id: string | null
   client_id: string | null
   started_on: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type OutgoingPayment = {
+  id: string
+  label: string
+  category: OutgoingCategory
+  amount: number
+  billing_cycle: BillingCycle
+  next_due_date: string | null
+  active: boolean
+  supplier: string | null
+  payment_method: string | null
+  is_business: boolean
+  last_paid_on: string | null
   notes: string | null
   created_at: string
   updated_at: string

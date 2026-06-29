@@ -4,9 +4,10 @@ import { Trophy, HelpCircle, Banknote, Snowflake, Hourglass, Lightbulb } from 'l
 import { useProjects } from '@/features/projects/useProjects'
 import { useTasks } from '@/features/tasks/useTasks'
 import { useRecurring } from '@/features/money/useRecurring'
+import { useOutgoingPayments } from '@/features/money/useOutgoingPayments'
 import { useQuotes } from '@/features/quotes/useQuotes'
 import { useIdeas } from '@/features/ideas/useIdeas'
-import { gbp, humanise } from '@/lib/types'
+import { gbp, humanise, monthlyEquivalent } from '@/lib/types'
 import { taskWaiting, taskAvoided, recentlyCompleted, daysSince } from '@/features/tasks/taskLogic'
 
 const todayStr = () => new Date().toISOString().slice(0, 10)
@@ -41,11 +42,12 @@ export default function WeeklyReview() {
   const { data: projects } = useProjects()
   const { data: tasks } = useTasks()
   const { data: recurring } = useRecurring()
+  const { data: outgoing } = useOutgoingPayments()
   const { data: quotes } = useQuotes()
   const { data: ideas } = useIdeas()
 
   const r = useMemo(() => {
-    const ps = projects ?? [], ts = tasks ?? [], rs = recurring ?? [], qs = quotes ?? [], is = ideas ?? []
+    const ps = projects ?? [], ts = tasks ?? [], rs = recurring ?? [], os = outgoing ?? [], qs = quotes ?? [], is = ideas ?? []
     const today = todayStr(), soon = plusDays(30)
 
     const wins: Item[] = [
@@ -59,6 +61,8 @@ export default function WeeklyReview() {
         .map((p) => ({ key: `m${p.id}`, text: p.name, meta: gbp.format(p.metrics?.outstanding_balance ?? 0), to: `/projects/${p.id}`, tone: 'rose' as const })),
       ...rs.filter((x) => x.active && x.next_due_date && x.next_due_date <= soon)
         .map((x) => ({ key: `r${x.id}`, text: `${x.label} — invoice`, meta: x.next_due_date!, to: '/money', tone: (x.next_due_date! < today ? 'rose' : 'amber') as 'rose' | 'amber' })),
+      ...os.filter((x) => x.active && x.next_due_date && x.next_due_date <= soon)
+        .map((x) => ({ key: `o${x.id}`, text: `Pay: ${x.label}`, meta: x.next_due_date!, to: '/money', tone: (x.next_due_date! < today ? 'rose' : 'amber') as 'rose' | 'amber' })),
       ...qs.filter((q) => q.status === 'sent' && q.follow_up_date && q.follow_up_date <= today)
         .map((q) => ({ key: `q${q.id}`, text: `Chase quote: ${q.title}`, meta: 'follow up', to: '/quotes', tone: 'amber' as const })),
     ]
@@ -74,10 +78,11 @@ export default function WeeklyReview() {
       .slice(0, 5).map((i) => ({ key: i.id, text: i.name, meta: `${i.opportunity_score}`, to: '/ideas', tone: (i.opportunity_score! >= 70 ? 'emerald' : 'slate') as 'emerald' | 'slate' }))
 
     return { wins, decisions, money, stale, waiting, topIdeas }
-  }, [projects, tasks, recurring, quotes, ideas])
+  }, [projects, tasks, recurring, outgoing, quotes, ideas])
 
   const range = `${new Date(plusDays(-6)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
   const moneyTotal = (projects ?? []).filter((p) => ['invoiced', 'part_paid', 'overdue'].includes(p.payment_status)).reduce((s, p) => s + (p.metrics?.outstanding_balance ?? 0), 0)
+  const outgoingTotal = (outgoing ?? []).filter((p) => p.active).reduce((s, p) => s + monthlyEquivalent(p), 0)
 
   return (
     <div className="space-y-4">
@@ -87,6 +92,7 @@ export default function WeeklyReview() {
           <span className="font-semibold text-emerald-600">{r.wins.length}</span> finished ·
           <span className="font-semibold text-amber-600"> {r.decisions.length + r.stale.length}</span> need attention ·
           <span className="font-semibold text-rose-600"> {gbp.format(moneyTotal)}</span> to chase ·
+          <span className="font-semibold text-slate-700"> {gbp.format(outgoingTotal)}</span> monthly outgoing ·
           <span className="font-semibold text-slate-700"> {r.waiting.length}</span> waiting
         </p>
       </div>

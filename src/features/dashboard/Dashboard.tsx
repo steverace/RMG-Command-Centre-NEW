@@ -4,8 +4,9 @@ import { Bot, Wrench, Hourglass, AlarmClock, Banknote, TrendingUp, CheckCircle2,
 import { useProjects } from '@/features/projects/useProjects'
 import { useTasks } from '@/features/tasks/useTasks'
 import { useRecurring } from '@/features/money/useRecurring'
+import { useOutgoingPayments } from '@/features/money/useOutgoingPayments'
 import { gbp, humanise, monthlyEquivalent } from '@/lib/types'
-import type { ProjectWithMetrics, Task, RecurringRevenue } from '@/lib/types'
+import type { OutgoingPayment, ProjectWithMetrics, Task, RecurringRevenue } from '@/lib/types'
 import { taskOverdue, taskWaiting, taskAiReady, taskManual, taskAvoided, recentlyCompleted } from '@/features/tasks/taskLogic'
 
 type Tone = 'rose' | 'amber' | 'emerald' | 'indigo' | 'slate'
@@ -39,11 +40,13 @@ export default function Dashboard() {
   const { data: projects, isLoading: lp } = useProjects()
   const { data: tasks, isLoading: lt } = useTasks()
   const { data: recurring } = useRecurring()
+  const { data: outgoing } = useOutgoingPayments()
 
   const d = useMemo(() => {
     const ps: ProjectWithMetrics[] = projects ?? []
     const ts: Task[] = tasks ?? []
     const rs: RecurringRevenue[] = recurring ?? []
+    const os: OutgoingPayment[] = outgoing ?? []
     const today = todayStr()
     const soon = plusDays(30)
     const nameOf = new Map(ps.map((p) => [p.id, p.name]))
@@ -65,6 +68,7 @@ export default function Dashboard() {
     const mrr = rs.filter((r) => r.active).reduce((s, r) => s + monthlyEquivalent(r), 0)
     const activeRecurring = rs.filter((r) => r.active).length
     const renewalsDue = rs.filter((r) => r.active && r.next_due_date && r.next_due_date <= soon).sort((a, b) => (a.next_due_date! < b.next_due_date! ? -1 : 1))
+    const monthlyOutgoing = os.filter((p) => p.active).reduce((s, p) => s + monthlyEquivalent(p), 0)
 
     const aiReady = ts.filter(taskAiReady)
     const manual = ts.filter(taskManual)
@@ -104,8 +108,8 @@ export default function Dashboard() {
       { label: 'Unpaid', value: gbp.format(totalOutstanding), note: `${unpaid.length} invoice${unpaid.length === 1 ? '' : 's'}`, tone: 'rose' as Tone },
     ]
 
-    return { top3, signals, unpaid, totalOutstanding, topOverdue, paidToDate, mrr, activeRecurring, renewalsDue, aiReady, manual, avoided, done, activeProjects, waiting }
-  }, [projects, tasks, recurring])
+    return { top3, signals, unpaid, totalOutstanding, topOverdue, paidToDate, mrr, monthlyOutgoing, activeRecurring, renewalsDue, aiReady, manual, avoided, done, activeProjects, waiting }
+  }, [projects, tasks, recurring, outgoing])
 
   if ((lp || lt) && !projects && !tasks) return <p className="text-sm text-slate-400">Loading your deck…</p>
 
@@ -138,7 +142,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
         <Card className="p-4">
           <div className="mb-3 flex items-center gap-2"><Banknote className="h-4 w-4 text-slate-400" /><Label>Money waiting to be collected</Label></div>
           <div className="ff-mono text-3xl font-semibold text-rose-600">{gbp.format(d.totalOutstanding)}</div>
@@ -158,6 +162,11 @@ export default function Dashboard() {
           <Label>Monthly recurring revenue</Label>
           <div className="ff-mono mt-1 text-3xl font-semibold text-emerald-600">{gbp.format(d.mrr)}</div>
           <div className="mt-0.5 text-[11px] text-slate-400">{d.activeRecurring} active recurring item{d.activeRecurring === 1 ? '' : 's'}</div>
+        </Card>
+        <Card className="flex flex-col justify-center p-4">
+          <Label>Monthly outgoing</Label>
+          <div className="ff-mono mt-1 text-3xl font-semibold text-slate-800">{gbp.format(d.monthlyOutgoing)}</div>
+          <div className={`mt-0.5 text-[11px] ${d.mrr - d.monthlyOutgoing >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>{gbp.format(d.mrr - d.monthlyOutgoing)} net recurring</div>
         </Card>
       </div>
 
