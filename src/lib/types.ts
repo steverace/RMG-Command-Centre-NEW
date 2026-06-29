@@ -23,7 +23,7 @@ export type WaitingOnType = (typeof WAITING_ON_TYPES)[number]
 export const RECURRING_CATEGORIES = ['hosting','domain','seo_retainer','affiliate','directory','other_recurring'] as const
 export type RecurringCategory = (typeof RECURRING_CATEGORIES)[number]
 
-export const BILLING_CYCLES = ['monthly','quarterly','annual','one_off'] as const
+export const BILLING_CYCLES = ['weekly','monthly','quarterly','annual','one_off'] as const
 export type BillingCycle = (typeof BILLING_CYCLES)[number]
 
 export const QUOTE_STATUSES = ['to_send','sent','accepted','declined','expired'] as const
@@ -180,6 +180,7 @@ export function clientDisplayName(c: { business_name: string | null; name: strin
 
 export function monthlyEquivalent(r: { amount: number; billing_cycle: BillingCycle }): number {
   switch (r.billing_cycle) {
+    case 'weekly': return r.amount * 52 / 12
     case 'monthly': return r.amount
     case 'quarterly': return r.amount / 3
     case 'annual': return r.amount / 12

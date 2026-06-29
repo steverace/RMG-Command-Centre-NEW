@@ -37,7 +37,8 @@ export async function archiveRecurring(id: string): Promise<void> {
 export async function advanceRenewal(id: string, current: string | null, cycle: BillingCycle): Promise<void> {
   if (!current) return
   const d = new Date(current + 'T00:00:00')
-  if (cycle === 'monthly') d.setMonth(d.getMonth() + 1)
+  if (cycle === 'weekly') d.setDate(d.getDate() + 7)
+  else if (cycle === 'monthly') d.setMonth(d.getMonth() + 1)
   else if (cycle === 'quarterly') d.setMonth(d.getMonth() + 3)
   else if (cycle === 'annual') d.setFullYear(d.getFullYear() + 1)
   else return

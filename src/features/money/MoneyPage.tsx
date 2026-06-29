@@ -108,7 +108,7 @@ export default function MoneyPage() {
                     {r.next_due_date && <span className="ff-mono">due {r.next_due_date}</span>}
                   </div>
                 </div>
-                <span className="ff-mono shrink-0 text-sm font-medium text-slate-700">{gbp.format(r.amount)}<span className="text-[10px] text-slate-400">/{r.billing_cycle === 'annual' ? 'yr' : r.billing_cycle === 'quarterly' ? 'qtr' : r.billing_cycle === 'monthly' ? 'mo' : 'once'}</span></span>
+                <span className="ff-mono shrink-0 text-sm font-medium text-slate-700">{gbp.format(r.amount)}<span className="text-[10px] text-slate-400">/{r.billing_cycle === 'annual' ? 'yr' : r.billing_cycle === 'quarterly' ? 'qtr' : r.billing_cycle === 'monthly' ? 'mo' : r.billing_cycle === 'weekly' ? 'wk' : 'once'}</span></span>
               </button>
             ))}
           </div>
