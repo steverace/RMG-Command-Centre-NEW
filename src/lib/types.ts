@@ -26,6 +26,18 @@ export type RecurringCategory = (typeof RECURRING_CATEGORIES)[number]
 export const OUTGOING_CATEGORIES = ['subscription','hosting','domain','software','ai_tool','bill','finance','tax','other'] as const
 export type OutgoingCategory = (typeof OUTGOING_CATEGORIES)[number]
 
+export const LIFE_AREAS = ['race_media','money','health','personal','learning','home','relationships','other'] as const
+export type LifeArea = (typeof LIFE_AREAS)[number]
+
+export const GOAL_STATUSES = ['active','paused','complete','abandoned'] as const
+export type GoalStatus = (typeof GOAL_STATUSES)[number]
+
+export const HABIT_FREQUENCIES = ['daily','weekdays','weekly','custom'] as const
+export type HabitFrequency = (typeof HABIT_FREQUENCIES)[number]
+
+export const HABIT_TARGET_TYPES = ['check','number'] as const
+export type HabitTargetType = (typeof HABIT_TARGET_TYPES)[number]
+
 export const BILLING_CYCLES = ['weekly','monthly','quarterly','annual','one_off'] as const
 export type BillingCycle = (typeof BILLING_CYCLES)[number]
 
@@ -173,6 +185,64 @@ export type OutgoingPayment = {
   created_at: string
   updated_at: string
   deleted_at: string | null
+}
+
+export type Goal = {
+  id: string
+  title: string
+  area: LifeArea
+  why: string | null
+  target_label: string | null
+  target_value: number | null
+  current_value: number | null
+  unit: string | null
+  deadline: string | null
+  status: GoalStatus
+  notes: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type GoalMilestone = {
+  id: string
+  goal_id: string
+  title: string
+  status: ItemStatus
+  due_date: string | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type Habit = {
+  id: string
+  name: string
+  area: LifeArea
+  frequency: HabitFrequency
+  days_of_week: number[] | null
+  target_type: HabitTargetType
+  target_value: number | null
+  unit: string | null
+  time_of_day: string | null
+  goal_id: string | null
+  active: boolean
+  notes: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type HabitLog = {
+  id: string
+  habit_id: string
+  log_date: string
+  completed: boolean
+  value: number | null
+  note: string | null
+  created_at: string
+  updated_at: string
 }
 
 export type Quote = {

@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, FolderKanban, ListChecks, Lightbulb,
-  Users, PoundSterling, FileText, CalendarCheck, Settings, Bot, CalendarDays, Plug, Bell,
+  Users, PoundSterling, FileText, CalendarCheck, Settings, Bot, CalendarDays, Plug, Bell, Target,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -17,6 +17,7 @@ export const navItems: NavItem[] = [
   { to: '/projects', label: 'Projects', short: 'Projects', icon: FolderKanban, primary: true },
   { to: '/tasks', label: 'Tasks', short: 'Tasks', icon: ListChecks, primary: true },
   { to: '/ideas', label: 'Ideas', short: 'Ideas', icon: Lightbulb },
+  { to: '/goals', label: 'Goals & Habits', short: 'Goals', icon: Target },
   { to: '/clients', label: 'Clients', short: 'Clients', icon: Users },
   { to: '/money', label: 'Money', short: 'Money', icon: PoundSterling, primary: true },
   { to: '/quotes', label: 'Quotes', short: 'Quotes', icon: FileText, primary: true },

@@ -5,8 +5,9 @@ import { useProjects } from '@/features/projects/useProjects'
 import { useTasks } from '@/features/tasks/useTasks'
 import { useRecurring } from '@/features/money/useRecurring'
 import { useOutgoingPayments } from '@/features/money/useOutgoingPayments'
+import { useGoals, useHabitLogs, useHabits } from '@/features/goals/useGoalsHabits'
 import { gbp, humanise, monthlyEquivalent } from '@/lib/types'
-import type { OutgoingPayment, ProjectWithMetrics, Task, RecurringRevenue } from '@/lib/types'
+import type { Goal, Habit, HabitLog, OutgoingPayment, ProjectWithMetrics, Task, RecurringRevenue } from '@/lib/types'
 import { taskOverdue, taskWaiting, taskAiReady, taskManual, taskAvoided, recentlyCompleted } from '@/features/tasks/taskLogic'
 
 type Tone = 'rose' | 'amber' | 'emerald' | 'indigo' | 'slate'
@@ -15,6 +16,16 @@ const textC: Record<Tone, string> = { rose: 'text-rose-600', amber: 'text-amber-
 const chipC: Record<Tone, string> = { rose: 'bg-rose-50 text-rose-700', amber: 'bg-amber-50 text-amber-700', emerald: 'bg-emerald-50 text-emerald-700', indigo: 'bg-indigo-50 text-indigo-700', slate: 'bg-slate-100 text-slate-600' }
 const todayStr = () => new Date().toISOString().slice(0, 10)
 function plusDays(n: number) { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
+function daysAgo(n: number) { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10) }
+function isHabitDueToday(habit: Habit, logs: HabitLog[]) {
+  if (!habit.active) return false
+  const day = new Date().getDay()
+  if (habit.frequency === 'daily') return true
+  if (habit.frequency === 'weekdays') return day >= 1 && day <= 5
+  if (habit.frequency === 'custom') return (habit.days_of_week ?? []).includes(day)
+  const weekStart = daysAgo(day === 0 ? 6 : day - 1)
+  return !logs.some((l) => l.habit_id === habit.id && l.completed && l.log_date >= weekStart)
+}
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <div className={`rounded-2xl border border-slate-200 bg-white ${className}`}>{children}</div>
@@ -41,12 +52,18 @@ export default function Dashboard() {
   const { data: tasks, isLoading: lt } = useTasks()
   const { data: recurring } = useRecurring()
   const { data: outgoing } = useOutgoingPayments()
+  const { data: goals } = useGoals()
+  const { data: habits } = useHabits()
+  const { data: habitLogs } = useHabitLogs()
 
   const d = useMemo(() => {
     const ps: ProjectWithMetrics[] = projects ?? []
     const ts: Task[] = tasks ?? []
     const rs: RecurringRevenue[] = recurring ?? []
     const os: OutgoingPayment[] = outgoing ?? []
+    const gs: Goal[] = goals ?? []
+    const hs: Habit[] = habits ?? []
+    const hls: HabitLog[] = habitLogs ?? []
     const today = todayStr()
     const soon = plusDays(30)
     const nameOf = new Map(ps.map((p) => [p.id, p.name]))
@@ -75,6 +92,10 @@ export default function Dashboard() {
     const avoided = ts.filter(taskAvoided).sort((a, b) => (b.avoidance_level ?? 0) - (a.avoidance_level ?? 0))
     const done = ts.filter(recentlyCompleted)
     const activeProjects = ps.filter((p) => p.status === 'active')
+    const activeGoals = gs.filter((g) => g.status === 'active')
+    const goalsAtRisk = activeGoals.filter((g) => g.deadline && g.deadline < today)
+    const habitsDueToday = hs.filter((h) => isHabitDueToday(h, hls))
+    const habitsDoneToday = habitsDueToday.filter((h) => hls.some((l) => l.habit_id === h.id && l.log_date === today && l.completed))
 
     type Cand = { name: string; sub: string; reason: string; tone: Tone; score: number; to: string }
     const cands: Cand[] = []
@@ -105,11 +126,12 @@ export default function Dashboard() {
       { label: 'Stale', value: String(stale.length), note: 'untouched 14d+', tone: 'amber' as Tone },
       { label: 'No next action', value: String(noNext.length), note: 'needs a plan', tone: 'amber' as Tone },
       { label: 'Waiting on', value: String(waiting.length), note: 'blocked elsewhere', tone: 'slate' as Tone },
+      { label: 'Habits', value: `${habitsDoneToday.length}/${habitsDueToday.length}`, note: `${activeGoals.length} active goals`, tone: goalsAtRisk.length > 0 ? 'amber' as Tone : 'emerald' as Tone },
       { label: 'Unpaid', value: gbp.format(totalOutstanding), note: `${unpaid.length} invoice${unpaid.length === 1 ? '' : 's'}`, tone: 'rose' as Tone },
     ]
 
     return { top3, signals, unpaid, totalOutstanding, topOverdue, paidToDate, mrr, monthlyOutgoing, activeRecurring, renewalsDue, aiReady, manual, avoided, done, activeProjects, waiting }
-  }, [projects, tasks, recurring, outgoing])
+  }, [projects, tasks, recurring, outgoing, goals, habits, habitLogs])
 
   if ((lp || lt) && !projects && !tasks) return <p className="text-sm text-slate-400">Loading your deck…</p>
 
@@ -132,7 +154,7 @@ export default function Dashboard() {
         )}
       </Card>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
         {d.signals.map((s) => (
           <Card key={s.label} className="p-3.5">
             <div className="mb-2 flex items-center justify-between"><Label>{s.label}</Label><span className={`h-1.5 w-1.5 rounded-full ${dotC[s.tone]}`} /></div>

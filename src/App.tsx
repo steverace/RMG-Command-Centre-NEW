@@ -13,6 +13,7 @@ import ClientDetail from '@/features/clients/ClientDetail'
 import MoneyPage from '@/features/money/MoneyPage'
 import QuotesPage from '@/features/quotes/QuotesPage'
 import IdeasPage from '@/features/ideas/IdeasPage'
+import GoalsHabitsPage from '@/features/goals/GoalsHabitsPage'
 import WeeklyReview from '@/features/review/WeeklyReview'
 import SettingsPage from '@/features/settings/SettingsPage'
 import VoiceAgentPage from '@/features/voice/VoiceAgentPage'
@@ -20,7 +21,7 @@ import CalendarPage from '@/features/calendar/CalendarPage'
 import AIAccessPage from '@/features/integrations/AIAccessPage'
 import NotificationsPage from '@/features/notifications/NotificationsPage'
 
-const BUILT = ['/', '/projects', '/tasks', '/clients', '/money', '/quotes', '/ideas', '/calendar', '/notifications', '/voice', '/ai-access', '/review', '/settings']
+const BUILT = ['/', '/projects', '/tasks', '/clients', '/money', '/quotes', '/ideas', '/goals', '/calendar', '/notifications', '/voice', '/ai-access', '/review', '/settings']
 
 function Loader() {
   return (
@@ -51,6 +52,7 @@ function Guarded() {
         <Route path="/money" element={<MoneyPage />} />
         <Route path="/quotes" element={<QuotesPage />} />
         <Route path="/ideas" element={<IdeasPage />} />
+        <Route path="/goals" element={<GoalsHabitsPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/voice" element={<VoiceAgentPage />} />
