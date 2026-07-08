@@ -2,12 +2,13 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { X, Archive } from 'lucide-react'
 import {
-  ITEM_STATUSES, PRIORITIES, TASK_ENERGIES, WAITING_ON_TYPES, humanise,
+  ITEM_STATUSES, PRIORITIES, TASK_ENERGIES, WAITING_ON_TYPES, clientDisplayName, humanise,
 } from '@/lib/types'
 import type { Task } from '@/lib/types'
 import type { TaskInput } from '@/lib/tasks'
 import { useCreateTask, useUpdateTask, useArchiveTask } from '@/features/tasks/useTasks'
 import { useProjects } from '@/features/projects/useProjects'
+import { useClients } from '@/features/clients/useClients'
 
 const labelCls = 'mb-1 block text-xs font-medium text-slate-500'
 const inputCls = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500'
@@ -17,10 +18,12 @@ export default function TaskForm({ task, onClose, defaultProjectId = '' }: { tas
   const update = useUpdateTask()
   const archive = useArchiveTask()
   const { data: projects } = useProjects()
+  const { data: clients } = useClients()
   const editing = !!task
 
   const [title, setTitle] = useState(task?.title ?? '')
   const [projectId, setProjectId] = useState(task?.project_id ?? defaultProjectId)
+  const [clientId, setClientId] = useState(task?.client_id ?? '')
   const [status, setStatus] = useState(task?.status ?? 'not_started')
   const [priority, setPriority] = useState(task?.priority ?? 'medium')
   const [dueDate, setDueDate] = useState(task?.due_date ?? '')
@@ -52,6 +55,7 @@ export default function TaskForm({ task, onClose, defaultProjectId = '' }: { tas
     const input: TaskInput = {
       title: title.trim(),
       project_id: projectId || null,
+      client_id: clientId || null,
       status, priority,
       due_date: dueDate || null,
       energy: (energy || null) as TaskInput['energy'],
@@ -92,12 +96,21 @@ export default function TaskForm({ task, onClose, defaultProjectId = '' }: { tas
             <input id="t-title" required value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} placeholder="e.g. Chase Xing Design invoice" />
           </div>
 
-          <div>
-            <label className={labelCls} htmlFor="t-project">Project <span className="text-slate-300">(optional)</span></label>
-            <select id="t-project" value={projectId} onChange={(e) => setProjectId(e.target.value)} className={inputCls}>
-              <option value="">— Standalone (no project) —</option>
-              {(projects ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label className={labelCls} htmlFor="t-project">Project <span className="text-slate-300">(optional)</span></label>
+              <select id="t-project" value={projectId} onChange={(e) => setProjectId(e.target.value)} className={inputCls}>
+                <option value="">Standalone task</option>
+                {(projects ?? []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={labelCls} htmlFor="t-client">Client <span className="text-slate-300">(optional)</span></label>
+              <select id="t-client" value={clientId} onChange={(e) => setClientId(e.target.value)} className={inputCls}>
+                <option value="">No linked client</option>
+                {(clients ?? []).map((c) => <option key={c.id} value={c.id}>{clientDisplayName(c)}</option>)}
+              </select>
+            </div>
           </div>
 
           <div>

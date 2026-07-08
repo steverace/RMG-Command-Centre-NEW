@@ -340,10 +340,10 @@ export default function GoalsHabitsPage() {
   const updateMilestone = useUpdateGoalMilestoneStatus()
   const archiveMilestone = useArchiveGoalMilestone()
 
-  const goals = goalsQuery.data ?? []
-  const milestones = milestonesQuery.data ?? []
-  const habits = habitsQuery.data ?? []
-  const logs = logsQuery.data ?? []
+  const goals = useMemo(() => goalsQuery.data ?? [], [goalsQuery.data])
+  const milestones = useMemo(() => milestonesQuery.data ?? [], [milestonesQuery.data])
+  const habits = useMemo(() => habitsQuery.data ?? [], [habitsQuery.data])
+  const logs = useMemo(() => logsQuery.data ?? [], [logsQuery.data])
   const today = todayStr()
   const logMap = useMemo(() => new Map(logs.map((l) => [logKey(l.habit_id, l.log_date), l])), [logs])
   const goalName = useMemo(() => new Map(goals.map((g) => [g.id, g.title])), [goals])

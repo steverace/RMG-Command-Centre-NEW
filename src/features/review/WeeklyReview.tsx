@@ -73,16 +73,16 @@ export default function WeeklyReview() {
     ]
     const decisions: Item[] = ps.filter((p) => p.metrics?.has_no_next_action).map((p) => ({ key: p.id, text: p.name, meta: 'no next action', to: `/projects/${p.id}`, tone: 'amber' as const }))
 
-    const money: Item[] = [
+    const incomingMoney: Item[] = [
       ...ps.filter((p) => ['invoiced', 'part_paid', 'overdue'].includes(p.payment_status) && (p.metrics?.outstanding_balance ?? 0) > 0)
         .map((p) => ({ key: `m${p.id}`, text: p.name, meta: gbp.format(p.metrics?.outstanding_balance ?? 0), to: `/projects/${p.id}`, tone: 'rose' as const })),
       ...rs.filter((x) => x.active && x.next_due_date && x.next_due_date <= soon)
-        .map((x) => ({ key: `r${x.id}`, text: `${x.label} — invoice`, meta: x.next_due_date!, to: '/money', tone: (x.next_due_date! < today ? 'rose' : 'amber') as 'rose' | 'amber' })),
-      ...os.filter((x) => x.active && x.next_due_date && x.next_due_date <= soon)
-        .map((x) => ({ key: `o${x.id}`, text: `Pay: ${x.label}`, meta: x.next_due_date!, to: '/money', tone: (x.next_due_date! < today ? 'rose' : 'amber') as 'rose' | 'amber' })),
+        .map((x) => ({ key: `r${x.id}`, text: `${x.label} - invoice`, meta: x.next_due_date!, to: '/money', tone: (x.next_due_date! < today ? 'rose' : 'amber') as 'rose' | 'amber' })),
       ...qs.filter((q) => q.status === 'sent' && q.follow_up_date && q.follow_up_date <= today)
         .map((q) => ({ key: `q${q.id}`, text: `Chase quote: ${q.title}`, meta: 'follow up', to: '/quotes', tone: 'amber' as const })),
     ]
+    const outgoingDue: Item[] = os.filter((x) => x.active && x.next_due_date && x.next_due_date <= soon)
+      .map((x) => ({ key: `o${x.id}`, text: x.label, meta: x.next_due_date!, to: '/money', tone: (x.next_due_date! < today ? 'rose' : 'amber') as 'rose' | 'amber' }))
     const stale: Item[] = [
       ...ps.filter((p) => p.metrics?.is_stale).map((p) => ({ key: `s${p.id}`, text: p.name, meta: `${p.metrics?.days_since_last_worked ?? '?'}d`, to: `/projects/${p.id}`, tone: 'amber' as const })),
       ...ts.filter(taskAvoided).map((t) => ({ key: `a${t.id}`, text: t.title, meta: 'avoiding', to: '/tasks', tone: 'amber' as const })),
@@ -106,7 +106,7 @@ export default function WeeklyReview() {
         .map((h) => ({ key: `h-${h.id}`, text: h.name, meta: 'due today', to: '/goals', tone: 'amber' as const })),
     ]
 
-    return { wins, decisions, money, stale, waiting, topIdeas, goalHabits }
+    return { wins, decisions, incomingMoney, outgoingDue, stale, waiting, topIdeas, goalHabits }
   }, [projects, tasks, recurring, outgoing, quotes, ideas, goals, goalMilestones, habits, habitLogs])
 
   const range = `${new Date(plusDays(-6)).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} – ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
@@ -130,7 +130,8 @@ export default function WeeklyReview() {
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         <Section icon={<Trophy className="h-4 w-4 text-emerald-500" />} title="Wins this week" items={r.wins} empty="Nothing ticked off yet — there's still time." />
         <Section icon={<HelpCircle className="h-4 w-4 text-amber-500" />} title="Needs a decision" items={r.decisions} empty="Every active project has a next action. Tidy." />
-        <Section icon={<Banknote className="h-4 w-4 text-rose-500" />} title="Chase the money" items={r.money} empty="Nothing outstanding to chase." />
+        <Section icon={<Banknote className="h-4 w-4 text-rose-500" />} title="Chase incoming money" items={r.incomingMoney} empty="Nothing outstanding to chase." />
+        <Section icon={<Banknote className="h-4 w-4 text-amber-500" />} title="Outgoing due soon" items={r.outgoingDue} empty="No outgoing payments due soon." />
         <Section icon={<Snowflake className="h-4 w-4 text-sky-500" />} title="Going cold / avoiding" items={r.stale} empty="Nothing stale or avoided." />
         <Section icon={<Hourglass className="h-4 w-4 text-slate-400" />} title="Still waiting on others" items={r.waiting} empty="Not blocked on anyone." />
         <Section icon={<Lightbulb className="h-4 w-4 text-indigo-500" />} title="Ideas worth a look" items={r.topIdeas} empty="No live ideas to weigh up." />

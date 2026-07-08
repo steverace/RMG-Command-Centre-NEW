@@ -4,6 +4,7 @@ import type { Task, ItemStatus } from '@/lib/types'
 export type TaskInput = {
   title: string
   project_id: string | null
+  client_id: string | null
   status: Task['status']
   priority: Task['priority']
   due_date: string | null

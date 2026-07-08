@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CalendarDays, ExternalLink, RefreshCw } from 'lucide-react'
 
 type CalendarEvent = {
@@ -76,7 +76,7 @@ export default function CalendarPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [events, setEvents] = useState<CalendarEvent[]>([])
-  const [tokenClient, setTokenClient] = useState<GoogleTokenClient | null>(null)
+  const tokenClientRef = useRef<GoogleTokenClient | null>(null)
 
   useEffect(() => {
     if (!configured) return
@@ -95,7 +95,7 @@ export default function CalendarPage() {
           callback: () => undefined,
         })
         if (mounted && client) {
-          setTokenClient(client)
+          tokenClientRef.current = client
           setReady(true)
         }
       } catch (err) {
@@ -127,6 +127,7 @@ export default function CalendarPage() {
   }
 
   function connect() {
+    const tokenClient = tokenClientRef.current
     if (!tokenClient) return
     setBusy(true)
     setError(null)

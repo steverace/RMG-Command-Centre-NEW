@@ -28,6 +28,15 @@ function Tag({ children }: { children: string }) {
   return <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-slate-500">{children}</span>
 }
 
+function weightedProgress(items: ChecklistItem[], include: (item: ChecklistItem) => boolean): number | null {
+  const scoped = items.filter(include)
+  if (scoped.length === 0) return null
+  const total = scoped.reduce((sum, item) => sum + Math.max(1, item.weight || 1), 0)
+  const complete = scoped.filter((item) => item.status === 'complete').reduce((sum, item) => sum + Math.max(1, item.weight || 1), 0)
+  return Math.round((complete / total) * 100)
+}
+
+
 function ChecklistRow({ item, projectId }: { item: ChecklistItem; projectId: string }) {
   const setStatus = useSetItemStatus(projectId)
   const del = useDeleteChecklistItem(projectId)
@@ -135,18 +144,18 @@ function AddChecklistGate({ projectId, onClose }: { projectId: string; onClose: 
 
   return (
     <form onSubmit={submit} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <div className="flex gap-3">
-        <div className="flex-1">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_5rem_10rem]">
+        <div className="min-w-0">
           <label className={labelCls} htmlFor="ci-title">Checklist gate</label>
           <input id="ci-title" required value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} placeholder="e.g. Final client approval received" />
         </div>
-        <div className="w-20">
+        <div>
           <label className={labelCls} htmlFor="ci-weight">Weight</label>
           <select id="ci-weight" value={weight} onChange={(e) => setWeight(e.target.value)} className={inputCls}>
             {[1, 2, 3, 4, 5].map((w) => <option key={w} value={w}>{w}</option>)}
           </select>
         </div>
-        <div className="w-40">
+        <div>
           <label className={labelCls} htmlFor="ci-due">Due <span className="text-slate-300">(optional)</span></label>
           <input id="ci-due" type="date" value={due} onChange={(e) => setDue(e.target.value)} className={inputCls} />
         </div>
@@ -188,6 +197,12 @@ export default function ProjectDetail() {
 
   const m = project.metrics
   const gates = checklist.data ?? []
+  const checklistReady = !checklist.isLoading && !checklist.isError
+  const overallReadiness = checklistReady ? weightedProgress(gates, (gate) => gate.required_for_completion) : m?.overall_progress
+  const launchReadiness = checklistReady ? weightedProgress(gates, (gate) => gate.required_for_completion || gate.gate_launch) : m?.launch_readiness
+  const deliveryReadiness = checklistReady ? weightedProgress(gates, (gate) => gate.required_for_completion || gate.gate_delivery) : m?.delivery_readiness
+  const requiredIncomplete = checklistReady ? gates.filter((gate) => gate.required_for_completion && gate.status !== 'complete').length : (m?.required_incomplete ?? 0)
+  const readyToComplete = checklistReady ? gates.some((gate) => gate.required_for_completion) && requiredIncomplete === 0 : !!m?.definition_of_done_met
 
   function openNewTask() {
     setEditingTask(null)
@@ -223,9 +238,9 @@ export default function ProjectDetail() {
       </div>
 
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Reading label="Overall" value={m?.overall_progress} />
-        <Reading label="Launch readiness" value={m?.launch_readiness} />
-        <Reading label="Delivery readiness" value={m?.delivery_readiness} />
+        <Reading label="Overall" value={overallReadiness} />
+        <Reading label="Launch readiness" value={launchReadiness} />
+        <Reading label="Delivery readiness" value={deliveryReadiness} />
         <Reading label="Admin / payment" value={m?.admin_completion} />
       </div>
 
@@ -233,9 +248,9 @@ export default function ProjectDetail() {
         {(m?.outstanding_balance ?? 0) > 0 && <span>Outstanding <span className="ff-mono font-semibold text-rose-600">{gbp.format(m!.outstanding_balance!)}</span></span>}
         <span className="text-slate-600">AI-ready remaining <span className="ff-mono font-semibold text-indigo-600">{m?.ai_remaining ?? 0}</span></span>
         <span className="text-slate-600">Manual remaining <span className="ff-mono font-semibold text-slate-700">{m?.manual_remaining ?? 0}</span></span>
-        {m?.definition_of_done_met
+        {readyToComplete
           ? <span className="flex items-center gap-1.5 text-emerald-600"><CheckCircle2 className="h-4 w-4" /> Ready to complete</span>
-          : <span className="text-slate-500">{m?.required_incomplete ?? 0} required gate{(m?.required_incomplete ?? 0) === 1 ? '' : 's'} left</span>}
+          : <span className="text-slate-500">{requiredIncomplete} required gate{requiredIncomplete === 1 ? '' : 's'} left</span>}
       </div>
 
       {project.next_action && (

@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom'
 import { Plus, ListChecks, Bot, Wrench, Hourglass, MessageSquareWarning, ClipboardCheck } from 'lucide-react'
 import { useTasks, useSetTaskStatus } from '@/features/tasks/useTasks'
 import { useProjects } from '@/features/projects/useProjects'
+import { useClients } from '@/features/clients/useClients'
 import TaskForm from '@/features/tasks/TaskForm'
 import EmptyState from '@/components/EmptyState'
-import { ITEM_STATUSES, humanise } from '@/lib/types'
+import { ITEM_STATUSES, clientDisplayName, humanise } from '@/lib/types'
 import type { Task, ItemStatus } from '@/lib/types'
 import { taskOverdue, taskWaiting, taskAiReady, taskManual, taskAvoided, taskNeedsSteveInput, taskSteveReview } from '@/features/tasks/taskLogic'
 
@@ -21,7 +22,7 @@ const FILTERS: { key: Filter; label: string }[] = [
   { key: 'avoided', label: 'Avoiding' },
 ]
 
-function Row({ task, projectName, onEdit }: { task: Task; projectName?: string; onEdit: () => void }) {
+function Row({ task, projectName, clientName, onEdit }: { task: Task; projectName?: string; clientName?: string; onEdit: () => void }) {
   const setStatus = useSetTaskStatus()
   const overdue = taskOverdue(task)
   const complete = task.status === 'complete'
@@ -47,6 +48,15 @@ function Row({ task, projectName, onEdit }: { task: Task; projectName?: string; 
               {projectName}
             </Link>
           )}
+          {clientName && task.client_id && (
+            <Link
+              to={`/clients/${task.client_id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+            >
+              {clientName}
+            </Link>
+          )}
           {task.due_date && <span className={overdue ? 'ff-mono text-rose-600' : 'ff-mono'}>{task.due_date}</span>}
           {task.energy && <span>{humanise(task.energy)}</span>}
           {taskWaiting(task) && <span className="flex items-center gap-1 text-slate-500"><Hourglass className="h-3 w-3" /> {humanise(task.waiting_on_type!)}{task.waiting_on_person ? ` · ${task.waiting_on_person}` : ''}</span>}
@@ -69,6 +79,7 @@ function Row({ task, projectName, onEdit }: { task: Task; projectName?: string; 
 export default function TasksPage() {
   const { data: tasks, isLoading, isError, error } = useTasks()
   const { data: projects } = useProjects()
+  const { data: clients } = useClients()
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Task | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
@@ -78,6 +89,12 @@ export default function TasksPage() {
     ;(projects ?? []).forEach((p) => m.set(p.id, p.name))
     return m
   }, [projects])
+
+  const clientName = useMemo(() => {
+    const m = new Map<string, string>()
+    ;(clients ?? []).forEach((c) => m.set(c.id, clientDisplayName(c)))
+    return m
+  }, [clients])
 
   const filtered = useMemo(() => {
     const all = tasks ?? []
@@ -123,7 +140,7 @@ export default function TasksPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
           {filtered.length === 0
             ? <p className="py-3 text-sm text-slate-400">Nothing in this filter.</p>
-            : filtered.map((t) => <Row key={t.id} task={t} projectName={t.project_id ? projectName.get(t.project_id) : undefined} onEdit={() => openEdit(t)} />)}
+            : filtered.map((t) => <Row key={t.id} task={t} projectName={t.project_id ? projectName.get(t.project_id) : undefined} clientName={t.client_id ? clientName.get(t.client_id) : undefined} onEdit={() => openEdit(t)} />)}
         </div>
       )}
 

@@ -3,7 +3,9 @@ import type { FormEvent } from 'react'
 import { Lightbulb, ListChecks, FolderKanban, X } from 'lucide-react'
 import { useCreateTask } from '@/features/tasks/useTasks'
 import { useCreateProject, useProjects } from '@/features/projects/useProjects'
+import { useClients } from '@/features/clients/useClients'
 import { useCreateIdea } from '@/features/ideas/useIdeas'
+import { clientDisplayName } from '@/lib/types'
 import type { TaskInput } from '@/lib/tasks'
 import type { ProjectInput } from '@/lib/projects'
 import type { IdeaInput } from '@/lib/ideas'
@@ -23,10 +25,12 @@ export default function QuickAdd({ onClose }: { onClose: () => void }) {
   const createProject = useCreateProject()
   const createIdea = useCreateIdea()
   const { data: projects } = useProjects()
+  const { data: clients } = useClients()
   const [mode, setMode] = useState<Mode>('task')
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
   const [projectId, setProjectId] = useState('')
+  const [clientId, setClientId] = useState('')
   const [error, setError] = useState<string | null>(null)
   const busy = createTask.isPending || createProject.isPending || createIdea.isPending
 
@@ -42,6 +46,7 @@ export default function QuickAdd({ onClose }: { onClose: () => void }) {
         const input: TaskInput = {
           title: name,
           project_id: projectId || null,
+          client_id: clientId || null,
           status: 'not_started',
           priority: 'medium',
           due_date: null,
@@ -126,14 +131,25 @@ export default function QuickAdd({ onClose }: { onClose: () => void }) {
           </div>
 
           {mode === 'task' && (
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-500" htmlFor="qa-project">
-                Project <span className="text-slate-300">(optional)</span>
-              </label>
-              <select id="qa-project" value={projectId} onChange={(e) => setProjectId(e.target.value)} className={inputCls}>
-                <option value="">Standalone task</option>
-                {(projects ?? []).map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-              </select>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-500" htmlFor="qa-project">
+                  Project <span className="text-slate-300">(optional)</span>
+                </label>
+                <select id="qa-project" value={projectId} onChange={(e) => setProjectId(e.target.value)} className={inputCls}>
+                  <option value="">Standalone task</option>
+                  {(projects ?? []).map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-500" htmlFor="qa-client">
+                  Client <span className="text-slate-300">(optional)</span>
+                </label>
+                <select id="qa-client" value={clientId} onChange={(e) => setClientId(e.target.value)} className={inputCls}>
+                  <option value="">No linked client</option>
+                  {(clients ?? []).map((client) => <option key={client.id} value={client.id}>{clientDisplayName(client)}</option>)}
+                </select>
+              </div>
             </div>
           )}
 

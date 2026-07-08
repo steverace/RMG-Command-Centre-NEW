@@ -34,6 +34,7 @@ const tools = [
         limit: { type: 'number', minimum: 1, maximum: 50 },
         include_completed: { type: 'boolean' },
         project_id: { type: 'string' },
+        client_id: { type: 'string' },
         ai_ready_only: { type: 'boolean' },
       },
       additionalProperties: false,
@@ -54,6 +55,7 @@ const tools = [
         title: { type: 'string' },
         notes: { type: 'string' },
         project_id: { type: 'string' },
+        client_id: { type: 'string' },
         priority: { type: 'string', enum: ['low', 'medium', 'high', 'urgent'] },
         due_date: { type: 'string', description: 'YYYY-MM-DD' },
         energy: { type: 'string', enum: ['quick', 'deep_work', 'admin', 'annoying', 'client_chasing'] },
@@ -74,6 +76,7 @@ const tools = [
         title: { type: 'string' },
         notes: { type: 'string' },
         project_id: { type: 'string' },
+        client_id: { type: 'string' },
         status: { type: 'string', enum: ['not_started', 'in_progress', 'blocked', 'complete'] },
         priority: { type: 'string', enum: ['low', 'medium', 'high', 'urgent'] },
         due_date: { type: 'string', description: 'YYYY-MM-DD' },
@@ -218,6 +221,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
       'deleted_at=is.null',
       params.include_completed ? null : 'status=neq.complete',
       params.project_id ? `project_id=eq.${encodeURIComponent(String(params.project_id))}` : null,
+      params.client_id ? `client_id=eq.${encodeURIComponent(String(params.client_id))}` : null,
       params.ai_ready_only ? 'can_be_done_by_ai=eq.true&requires_manual=eq.false&blocked=eq.false&waiting_on_type=is.null' : null,
       'order=updated_at.desc',
       `limit=${limit}`,
@@ -232,7 +236,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
   if (name === 'get_focus_summary') {
     const [projects, tasks, metrics] = await Promise.all([
       supabaseGet(env, 'projects', 'select=id,name,status,priority,due_date,next_action,payment_status,amount_charged,amount_paid&deleted_at=is.null&order=updated_at.desc&limit=30'),
-      supabaseGet(env, 'tasks', 'select=id,title,project_id,status,priority,due_date,energy,notes,can_be_done_by_ai,requires_manual,blocked,waiting_on_type&deleted_at=is.null&status=neq.complete&order=updated_at.desc&limit=30'),
+      supabaseGet(env, 'tasks', 'select=id,title,project_id,client_id,status,priority,due_date,energy,notes,can_be_done_by_ai,requires_manual,blocked,waiting_on_type&deleted_at=is.null&status=neq.complete&order=updated_at.desc&limit=30'),
       supabaseGet(env, 'v_project_metrics', 'select=*'),
     ])
     return textResult({ projects, tasks, metrics })
@@ -244,6 +248,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     const row = {
       title,
       project_id: stringOrNull(params.project_id),
+      client_id: stringOrNull(params.client_id),
       status: 'not_started',
       priority: stringOrNull(params.priority) ?? 'medium',
       due_date: stringOrNull(params.due_date),
@@ -263,7 +268,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     const id = stringOrNull(params.id)
     if (!id) throw new Error('id is required')
     const patch: Record<string, unknown> = {}
-    for (const key of ['title', 'project_id', 'status', 'priority', 'due_date', 'energy', 'notes'] as const) {
+    for (const key of ['title', 'project_id', 'client_id', 'status', 'priority', 'due_date', 'energy', 'notes'] as const) {
       if (Object.prototype.hasOwnProperty.call(params, key)) patch[key] = stringOrNull(params[key])
     }
     if (typeof params.requires_manual === 'boolean') patch.requires_manual = params.requires_manual
@@ -365,3 +370,4 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
 
   return rpcError(body.id, -32601, `Unsupported method: ${body.method ?? 'missing'}`)
 }
+
