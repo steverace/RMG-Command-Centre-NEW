@@ -26,7 +26,22 @@ export async function listChecklist(projectId: string): Promise<ChecklistItem[]>
 }
 
 export async function createChecklistItem(projectId: string, input: ChecklistInput): Promise<void> {
-  const { error } = await supabase.from('checklist_items').insert({ project_id: projectId, ...input })
+  const { error } = await supabase.from('checklist_items').insert({
+    project_id: projectId,
+    title: input.title,
+    description: input.description,
+    status: 'not_started',
+    required_for_completion: input.required_for_completion,
+    gate_launch: input.gate_launch,
+    gate_delivery: input.gate_delivery,
+    weight: Math.max(1, input.weight || 1),
+    can_be_done_by_ai: input.can_be_done_by_ai,
+    requires_manual: input.requires_manual,
+    due_date: input.due_date,
+    completed_at: null,
+    notes: null,
+    sort_order: 0,
+  })
   if (error) throw error
 }
 

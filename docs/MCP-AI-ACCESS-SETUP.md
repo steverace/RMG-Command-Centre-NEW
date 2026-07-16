@@ -27,11 +27,21 @@ The older `SUPABASE_SERVICE_ROLE_KEY` name also works for legacy Supabase projec
 - `list_tasks`
 - `list_ai_ready_tasks`
 - `create_task`
+- `create_project`
+- `create_idea`
 - `update_task`
 - `mark_task_needs_steve`
 - `mark_task_complete_for_review`
+- `append_project_context`
+- `link_vault_note`
+- `list_knowledge_refs`
+- `get_entity_context`
 
 The task write tools are intentionally narrow. They can create and update tasks, move a task into Steve input needed, or mark an AI-completed task for Steve review.
+
+Project and idea write tools use safe defaults. Knowledge tools only create/read RMCC link records; the local Obsidian bridge creates the actual Markdown files in the vault.
+
+Run `docs/OBSIDIAN-INTEGRATION-SETUP.md` before using the knowledge tools live.
 
 ## Client endpoint
 

@@ -66,6 +66,45 @@ const tools = [
     },
   },
   {
+    name: 'create_project',
+    description: 'Create a new Command Centre project with safe defaults. Use for real work that should be tracked in RMCC.',
+    inputSchema: {
+      type: 'object',
+      required: ['name'],
+      properties: {
+        name: { type: 'string' },
+        type: { type: 'string', enum: ['client', 'personal', 'affiliate', 'directory', 'app', 'seo', 'content', 'automation', 'admin'] },
+        status: { type: 'string', enum: ['not_started', 'active', 'paused', 'waiting'] },
+        client_id: { type: 'string' },
+        priority: { type: 'string', enum: ['low', 'medium', 'high', 'urgent'] },
+        due_date: { type: 'string', description: 'YYYY-MM-DD' },
+        project_value: { type: 'number' },
+        next_action: { type: 'string' },
+        ai_can_help: { type: 'boolean' },
+        manual_required: { type: 'boolean' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'create_idea',
+    description: 'Capture a new opportunity or research idea in Command Centre.',
+    inputSchema: {
+      type: 'object',
+      required: ['name'],
+      properties: {
+        name: { type: 'string' },
+        description: { type: 'string' },
+        category: { type: 'string' },
+        why_it_might_work: { type: 'string' },
+        next_research_step: { type: 'string' },
+        expected_monthly_revenue: { type: 'number' },
+        revenue_confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     name: 'update_task',
     description: 'Update a Command Centre task by id, including status, notes, due date, priority, and Ready for AI state.',
     inputSchema: {
@@ -109,6 +148,64 @@ const tools = [
       properties: {
         id: { type: 'string' },
         summary: { type: 'string' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'append_project_context',
+    description: 'Append project context as an auditable AI event. Use for notes, decisions, or context discovered outside RMCC.',
+    inputSchema: {
+      type: 'object',
+      required: ['project_id', 'summary'],
+      properties: {
+        project_id: { type: 'string' },
+        summary: { type: 'string' },
+        source: { type: 'string' },
+        vault_path: { type: 'string' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'link_vault_note',
+    description: 'Link an Obsidian vault note path to an RMCC entity. The local bridge creates or updates the actual Markdown file.',
+    inputSchema: {
+      type: 'object',
+      required: ['entity_type', 'entity_id', 'vault_path', 'title'],
+      properties: {
+        entity_type: { type: 'string', enum: ['project', 'client', 'task', 'idea', 'quote', 'goal'] },
+        entity_id: { type: 'string' },
+        vault_path: { type: 'string' },
+        title: { type: 'string' },
+        summary: { type: 'string' },
+        tags: { type: 'array', items: { type: 'string' } },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'list_knowledge_refs',
+    description: 'List Obsidian vault notes linked to RMCC entities.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        entity_type: { type: 'string', enum: ['project', 'client', 'task', 'idea', 'quote', 'goal'] },
+        entity_id: { type: 'string' },
+        limit: { type: 'number', minimum: 1, maximum: 50 },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'get_entity_context',
+    description: 'Get one RMCC entity plus linked Obsidian references and recent AI context events.',
+    inputSchema: {
+      type: 'object',
+      required: ['entity_type', 'entity_id'],
+      properties: {
+        entity_type: { type: 'string', enum: ['project', 'client', 'task', 'idea', 'quote', 'goal'] },
+        entity_id: { type: 'string' },
       },
       additionalProperties: false,
     },
@@ -194,9 +291,40 @@ function stringOrNull(value: unknown) {
   return typeof value === 'string' && value.trim() ? value.trim() : null
 }
 
+function numberOrNull(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((item) => item.trim())
+}
+
+function entityType(value: unknown) {
+  const v = stringOrNull(value)
+  if (!v || !['project', 'client', 'task', 'idea', 'quote', 'goal'].includes(v)) throw new Error('valid entity_type is required')
+  return v
+}
+
+function tableForEntity(type: string) {
+  if (type === 'project') return 'projects'
+  if (type === 'client') return 'clients'
+  if (type === 'task') return 'tasks'
+  if (type === 'idea') return 'ideas'
+  if (type === 'quote') return 'quotes'
+  if (type === 'goal') return 'goals'
+  throw new Error(`Unsupported entity type: ${type}`)
+}
+
 async function getTask(env: Env, id: string) {
   const rows = await supabaseGet(env, 'tasks', `select=*&id=eq.${encodeURIComponent(id)}&deleted_at=is.null&limit=1`) as Array<Record<string, unknown>>
   if (!rows[0]) throw new Error(`Task not found: ${id}`)
+  return rows[0]
+}
+
+async function getEntity(env: Env, type: string, id: string) {
+  const rows = await supabaseGet(env, tableForEntity(type), `select=*&id=eq.${encodeURIComponent(id)}&deleted_at=is.null&limit=1`) as Array<Record<string, unknown>>
+  if (!rows[0]) throw new Error(`${type} not found: ${id}`)
   return rows[0]
 }
 
@@ -207,6 +335,28 @@ function datedNote(label: string, text: string) {
 function appendNote(existing: unknown, label: string, text: string) {
   const current = typeof existing === 'string' ? existing.trim() : ''
   return current ? `${current}\n\n${datedNote(label, text)}` : datedNote(label, text)
+}
+
+async function agentEvent(env: Env, row: {
+  source?: string | null
+  action: string
+  entity_type?: string | null
+  entity_id?: string | null
+  summary: string
+  metadata?: Record<string, unknown>
+}) {
+  try {
+    await supabaseInsert(env, 'agent_events', {
+      source: row.source ?? 'rmcc-mcp',
+      action: row.action,
+      entity_type: row.entity_type ?? null,
+      entity_id: row.entity_id ?? null,
+      summary: row.summary,
+      metadata: row.metadata ?? {},
+    })
+  } catch {
+    // Keep MCP actions usable while the optional audit table is being rolled out.
+  }
 }
 
 async function callTool(name: string, params: Record<string, unknown>, env: Env) {
@@ -262,7 +412,73 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
       waiting_since: null,
       avoidance_level: null,
     }
-    return textResult(await supabaseInsert(env, 'tasks', row))
+    const created = await supabaseInsert(env, 'tasks', row) as Array<Record<string, unknown>>
+    await agentEvent(env, {
+      action: 'create_task',
+      entity_type: 'task',
+      entity_id: stringOrNull(created[0]?.id),
+      summary: `Created task: ${title}`,
+      metadata: { ready_for_ai: readyForAi },
+    })
+    return textResult(created)
+  }
+  if (name === 'create_project') {
+    const projectName = stringOrNull(params.name)
+    if (!projectName) throw new Error('name is required')
+    const row = {
+      name: projectName,
+      type: stringOrNull(params.type) ?? 'personal',
+      status: stringOrNull(params.status) ?? 'not_started',
+      client_id: stringOrNull(params.client_id),
+      priority: stringOrNull(params.priority) ?? 'medium',
+      start_date: null,
+      due_date: stringOrNull(params.due_date),
+      last_worked_on: null,
+      project_value: numberOrNull(params.project_value),
+      amount_charged: 0,
+      amount_paid: 0,
+      payment_status: 'not_applicable',
+      next_action: stringOrNull(params.next_action),
+      ai_can_help: params.ai_can_help === true,
+      manual_required: params.manual_required !== false,
+    }
+    const created = await supabaseInsert(env, 'projects', row) as Array<Record<string, unknown>>
+    await agentEvent(env, {
+      action: 'create_project',
+      entity_type: 'project',
+      entity_id: stringOrNull(created[0]?.id),
+      summary: `Created project: ${projectName}`,
+      metadata: { next_action: row.next_action },
+    })
+    return textResult(created)
+  }
+  if (name === 'create_idea') {
+    const ideaName = stringOrNull(params.name)
+    if (!ideaName) throw new Error('name is required')
+    const row = {
+      name: ideaName,
+      description: stringOrNull(params.description),
+      category: stringOrNull(params.category),
+      why_it_might_work: stringOrNull(params.why_it_might_work),
+      evidence: null,
+      next_research_step: stringOrNull(params.next_research_step),
+      revenue_potential: null,
+      time_to_revenue: null,
+      difficulty: null,
+      excitement: null,
+      expected_monthly_revenue: numberOrNull(params.expected_monthly_revenue),
+      revenue_confidence: stringOrNull(params.revenue_confidence),
+      status: 'captured',
+    }
+    const created = await supabaseInsert(env, 'ideas', row) as Array<Record<string, unknown>>
+    await agentEvent(env, {
+      action: 'create_idea',
+      entity_type: 'idea',
+      entity_id: stringOrNull(created[0]?.id),
+      summary: `Captured idea: ${ideaName}`,
+      metadata: { category: row.category },
+    })
+    return textResult(created)
   }
   if (name === 'update_task') {
     const id = stringOrNull(params.id)
@@ -282,14 +498,22 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
         patch.waiting_since = null
       }
     }
-    return textResult(await supabasePatch(env, 'tasks', id, patch))
+    const updated = await supabasePatch(env, 'tasks', id, patch)
+    await agentEvent(env, {
+      action: 'update_task',
+      entity_type: 'task',
+      entity_id: id,
+      summary: `Updated task ${id}`,
+      metadata: patch,
+    })
+    return textResult(updated)
   }
   if (name === 'mark_task_needs_steve') {
     const id = stringOrNull(params.id)
     const reason = stringOrNull(params.reason)
     if (!id || !reason) throw new Error('id and reason are required')
     const task = await getTask(env, id)
-    return textResult(await supabasePatch(env, 'tasks', id, {
+    const updated = await supabasePatch(env, 'tasks', id, {
       status: 'blocked',
       blocked: true,
       can_be_done_by_ai: false,
@@ -298,14 +522,21 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
       waiting_on_person: 'Steve',
       waiting_since: new Date().toISOString().slice(0, 10),
       notes: appendNote(task.notes, 'AI needs Steve input', reason),
-    }))
+    })
+    await agentEvent(env, {
+      action: 'mark_task_needs_steve',
+      entity_type: 'task',
+      entity_id: id,
+      summary: reason,
+    })
+    return textResult(updated)
   }
   if (name === 'mark_task_complete_for_review') {
     const id = stringOrNull(params.id)
     const summary = stringOrNull(params.summary)
     if (!id || !summary) throw new Error('id and summary are required')
     const task = await getTask(env, id)
-    return textResult(await supabasePatch(env, 'tasks', id, {
+    const updated = await supabasePatch(env, 'tasks', id, {
       status: 'complete',
       completed_at: new Date().toISOString(),
       blocked: false,
@@ -315,7 +546,79 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
       waiting_on_person: null,
       waiting_since: null,
       notes: appendNote(task.notes, 'AI completed for Steve review', summary),
-    }))
+    })
+    await agentEvent(env, {
+      action: 'mark_task_complete_for_review',
+      entity_type: 'task',
+      entity_id: id,
+      summary,
+    })
+    return textResult(updated)
+  }
+  if (name === 'append_project_context') {
+    const projectId = stringOrNull(params.project_id)
+    const summary = stringOrNull(params.summary)
+    if (!projectId || !summary) throw new Error('project_id and summary are required')
+    await getEntity(env, 'project', projectId)
+    await agentEvent(env, {
+      source: stringOrNull(params.source) ?? 'rmcc-mcp',
+      action: 'append_project_context',
+      entity_type: 'project',
+      entity_id: projectId,
+      summary,
+      metadata: { vault_path: stringOrNull(params.vault_path) },
+    })
+    return textResult({ ok: true, project_id: projectId, summary })
+  }
+  if (name === 'link_vault_note') {
+    const type = entityType(params.entity_type)
+    const id = stringOrNull(params.entity_id)
+    const vaultPath = stringOrNull(params.vault_path)
+    const title = stringOrNull(params.title)
+    if (!id || !vaultPath || !title) throw new Error('entity_id, vault_path, and title are required')
+    await getEntity(env, type, id)
+    const row = {
+      entity_type: type,
+      entity_id: id,
+      vault_path: vaultPath,
+      title,
+      summary: stringOrNull(params.summary),
+      tags: stringList(params.tags),
+      last_synced_at: new Date().toISOString(),
+    }
+    const created = await supabaseInsert(env, 'knowledge_refs', row)
+    await agentEvent(env, {
+      action: 'link_vault_note',
+      entity_type: type,
+      entity_id: id,
+      summary: `Linked vault note: ${vaultPath}`,
+      metadata: { title, tags: row.tags },
+    })
+    return textResult(created)
+  }
+  if (name === 'list_knowledge_refs') {
+    const type = params.entity_type ? entityType(params.entity_type) : null
+    const id = stringOrNull(params.entity_id)
+    const query = [
+      'select=*',
+      'deleted_at=is.null',
+      type ? `entity_type=eq.${encodeURIComponent(type)}` : null,
+      id ? `entity_id=eq.${encodeURIComponent(id)}` : null,
+      'order=updated_at.desc',
+      `limit=${limit}`,
+    ].filter(Boolean).join('&')
+    return textResult(await supabaseGet(env, 'knowledge_refs', query))
+  }
+  if (name === 'get_entity_context') {
+    const type = entityType(params.entity_type)
+    const id = stringOrNull(params.entity_id)
+    if (!id) throw new Error('entity_id is required')
+    const [entity, knowledgeRefs, events] = await Promise.all([
+      getEntity(env, type, id),
+      supabaseGet(env, 'knowledge_refs', `select=*&entity_type=eq.${encodeURIComponent(type)}&entity_id=eq.${encodeURIComponent(id)}&deleted_at=is.null&order=updated_at.desc&limit=20`),
+      supabaseGet(env, 'agent_events', `select=*&entity_type=eq.${encodeURIComponent(type)}&entity_id=eq.${encodeURIComponent(id)}&order=created_at.desc&limit=20`),
+    ])
+    return textResult({ entity_type: type, entity, knowledge_refs: knowledgeRefs, agent_events: events })
   }
   throw new Error(`Unknown tool: ${name}`)
 }

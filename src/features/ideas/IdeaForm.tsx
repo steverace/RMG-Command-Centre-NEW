@@ -5,6 +5,7 @@ import { IDEA_STATUSES, CONFIDENCE_LEVELS, humanise, opportunityScore } from '@/
 import type { Idea } from '@/lib/types'
 import type { IdeaInput } from '@/lib/ideas'
 import { useCreateIdea, useUpdateIdea, useArchiveIdea } from '@/features/ideas/useIdeas'
+import KnowledgePanel from '@/features/knowledge/KnowledgePanel'
 
 const labelCls = 'mb-1 block text-xs font-medium text-slate-500'
 const inputCls = 'w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 outline-none focus:border-slate-500'
@@ -139,6 +140,14 @@ export default function IdeaForm({ idea, onClose }: { idea: Idea | null; onClose
             <label className={labelCls} htmlFor="i-next">Next research step</label>
             <input id="i-next" value={next} onChange={(e) => setNext(e.target.value)} className={inputCls} placeholder="The one thing to find out next" />
           </div>
+          {idea && (
+            <KnowledgePanel
+              entityType="idea"
+              entityId={idea.id}
+              entityTitle={idea.name}
+              note={idea.description ?? idea.next_research_step ?? undefined}
+            />
+          )}
           {error && <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p>}
         </div>
         <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4">

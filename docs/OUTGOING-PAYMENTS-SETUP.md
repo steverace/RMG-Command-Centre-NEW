@@ -30,9 +30,59 @@ create index if not exists outgoing_payments_due_idx
 create index if not exists outgoing_payments_active_idx
   on outgoing_payments (active)
   where deleted_at is null;
+
+alter table public.outgoing_payments enable row level security;
+
+revoke all on table public.outgoing_payments from anon;
+grant select, insert, update on table public.outgoing_payments to authenticated;
+grant all on table public.outgoing_payments to service_role;
+
+drop policy if exists "Authenticated users can read outgoing payments"
+  on public.outgoing_payments;
+create policy "Authenticated users can read outgoing payments"
+  on public.outgoing_payments
+  for select
+  to authenticated
+  using (deleted_at is null);
+
+drop policy if exists "Authenticated users can create outgoing payments"
+  on public.outgoing_payments;
+create policy "Authenticated users can create outgoing payments"
+  on public.outgoing_payments
+  for insert
+  to authenticated
+  with check (true);
+
+drop policy if exists "Authenticated users can update outgoing payments"
+  on public.outgoing_payments;
+create policy "Authenticated users can update outgoing payments"
+  on public.outgoing_payments
+  for update
+  to authenticated
+  using (true)
+  with check (true);
 ```
 
-If row level security is enabled in this Supabase project, add policies matching the other private Command Centre tables so the signed-in dashboard user can select, insert, update, and soft-delete rows.
+If Supabase also reports that `pg_net` is installed in the `public` schema, run this once in the SQL Editor to move it into Supabase's normal extension schema:
+
+```sql
+create schema if not exists extensions;
+
+do $$
+begin
+  if exists (
+    select 1
+    from pg_extension e
+    join pg_namespace n on n.oid = e.extnamespace
+    where e.extname = 'pg_net'
+      and n.nspname = 'public'
+  ) then
+    execute 'alter extension pg_net set schema extensions';
+  end if;
+end $$;
+```
+
+This app is a signed-in private dashboard, so the outgoing payment policies deliberately allow authenticated dashboard users to read active rows and create/update rows, including soft deletes via `deleted_at`.
 
 The app stores:
 

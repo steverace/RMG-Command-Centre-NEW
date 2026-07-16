@@ -310,6 +310,34 @@ export type Idea = {
 
 export type IdeaWithScore = Idea & { opportunity_score: number | null }
 
+export const KNOWLEDGE_ENTITY_TYPES = ['project','client','task','idea','quote','goal'] as const
+export type KnowledgeEntityType = (typeof KNOWLEDGE_ENTITY_TYPES)[number]
+
+export type KnowledgeRef = {
+  id: string
+  entity_type: KnowledgeEntityType
+  entity_id: string
+  vault_path: string
+  title: string
+  summary: string | null
+  tags: string[]
+  last_synced_at: string | null
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+}
+
+export type AgentEvent = {
+  id: string
+  source: string
+  action: string
+  entity_type: KnowledgeEntityType | null
+  entity_id: string | null
+  summary: string
+  metadata: Record<string, unknown>
+  created_at: string
+}
+
 // Mirrors the v_idea_scores SQL view exactly, for live preview in the form.
 export function opportunityScore(i: { revenue_potential: number | null; time_to_revenue: number | null; difficulty: number | null; excitement: number | null }): number | null {
   const { revenue_potential: r, time_to_revenue: t, difficulty: d, excitement: e } = i

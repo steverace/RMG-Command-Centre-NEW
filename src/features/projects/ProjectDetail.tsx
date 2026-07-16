@@ -7,6 +7,8 @@ import { useChecklist, useCreateChecklistItem, useSetItemStatus, useDeleteCheckl
 import { useTasks, useSetTaskStatus } from '@/features/tasks/useTasks'
 import TaskForm from '@/features/tasks/TaskForm'
 import ProjectForm from '@/features/projects/ProjectForm'
+import { taskWaiting } from '@/features/tasks/taskLogic'
+import KnowledgePanel from '@/features/knowledge/KnowledgePanel'
 import { humanise, gbp, ITEM_STATUSES } from '@/lib/types'
 import type { ChecklistItem, ItemStatus, Task } from '@/lib/types'
 
@@ -75,7 +77,7 @@ function ChecklistRow({ item, projectId }: { item: ChecklistItem; projectId: str
 function ProjectTaskRow({ task, onEdit }: { task: Task; onEdit: () => void }) {
   const setStatus = useSetTaskStatus()
   const complete = task.status === 'complete'
-  const waiting = !!task.waiting_on_type
+  const waiting = taskWaiting(task)
   const overdue = !!task.due_date && task.due_date < new Date().toISOString().slice(0, 10) && !complete
 
   return (
@@ -124,14 +126,19 @@ function AddChecklistGate({ projectId, onClose }: { projectId: string; onClose: 
   async function submit(e: FormEvent) {
     e.preventDefault()
     setErr(null)
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle) {
+      setErr('Add a checklist gate title first')
+      return
+    }
     try {
       await create.mutateAsync({
-        title: title.trim(),
+        title: trimmedTitle,
         description: null,
         required_for_completion: reqd,
         gate_launch: launch,
         gate_delivery: delivery,
-        weight: Number(weight),
+        weight: Number(weight) || 1,
         can_be_done_by_ai: ai,
         requires_manual: manual,
         due_date: due || null,
@@ -265,6 +272,15 @@ export default function ProjectDetail() {
           <p className="mt-1 text-sm text-amber-800">{project.blockers}</p>
         </div>
       )}
+
+      <div className="mb-5">
+        <KnowledgePanel
+          entityType="project"
+          entityId={project.id}
+          entityTitle={project.name}
+          note={project.next_action ?? undefined}
+        />
+      </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-4">
         <div className="flex items-start justify-between gap-3">

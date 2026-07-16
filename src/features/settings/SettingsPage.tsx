@@ -3,7 +3,7 @@ import { LogOut, Download, SlidersHorizontal, Info, NotebookPen } from 'lucide-r
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/auth/AuthProvider'
 
-const EXPORT_TABLES = ['clients', 'projects', 'checklist_items', 'tasks', 'ideas', 'goals', 'goal_milestones', 'habits', 'habit_logs', 'recurring_revenue', 'outgoing_payments', 'quotes', 'project_notes', 'transactions']
+const EXPORT_TABLES = ['clients', 'projects', 'checklist_items', 'tasks', 'ideas', 'goals', 'goal_milestones', 'habits', 'habit_logs', 'recurring_revenue', 'outgoing_payments', 'quotes', 'project_notes', 'transactions', 'knowledge_refs', 'agent_events']
 
 function Card({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (

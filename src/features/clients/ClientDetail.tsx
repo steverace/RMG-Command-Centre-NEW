@@ -6,6 +6,7 @@ import { useProjects } from '@/features/projects/useProjects'
 import { useRecurring } from '@/features/money/useRecurring'
 import { useQuotes } from '@/features/quotes/useQuotes'
 import ClientForm from '@/features/clients/ClientForm'
+import KnowledgePanel from '@/features/knowledge/KnowledgePanel'
 import { clientDisplayName, gbp, humanise } from '@/lib/types'
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -61,6 +62,13 @@ export default function ClientDetail() {
         <Section title="Notes">
           {client.notes ? <p className="whitespace-pre-line text-sm text-slate-600">{client.notes}</p> : <p className="text-sm text-slate-400">No notes yet.</p>}
         </Section>
+
+        <KnowledgePanel
+          entityType="client"
+          entityId={client.id}
+          entityTitle={clientDisplayName(client)}
+          note={client.notes ?? undefined}
+        />
 
         <Section title={`Projects (${myProjects.length})`}>
           {myProjects.length === 0 ? <p className="text-sm text-slate-400">No linked projects. Set a project's client to this one.</p> : (

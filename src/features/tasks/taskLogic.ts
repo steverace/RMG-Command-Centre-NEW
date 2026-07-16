@@ -8,7 +8,7 @@ export function daysSince(iso: string): number {
 
 export const isIncomplete = (t: Task) => t.status !== 'complete'
 export const taskOverdue = (t: Task) => !!t.due_date && t.due_date < todayStr() && isIncomplete(t)
-export const taskWaiting = (t: Task) => t.waiting_on_type !== null
+export const taskWaiting = (t: Task) => isIncomplete(t) && t.waiting_on_type !== null
 export const taskAiReady = (t: Task) => t.can_be_done_by_ai && !t.requires_manual && isIncomplete(t) && !t.blocked && !taskWaiting(t)
 export const taskManual = (t: Task) => t.requires_manual && isIncomplete(t) && !taskWaiting(t)
 export const taskAvoided = (t: Task) => (t.avoidance_level ?? 0) >= 4 && isIncomplete(t) && daysSince(t.updated_at) > 7
