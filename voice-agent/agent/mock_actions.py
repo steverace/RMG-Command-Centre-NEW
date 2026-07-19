@@ -333,8 +333,13 @@ def updateTask(task_id: str, patch: dict[str, Any]) -> dict[str, Any]:
 
 def updateProject(project_id: str, patch: dict[str, Any]) -> dict[str, Any]:
     if _using_real_rmcc():
+        remote_projects = _real_projects()
+        project = _find_project(project_id, remote_projects)
+        if not project:
+            return {"ok": False, "error": f"Project not found: {project_id}"}
+        resolved_id = project.get("id")
         arguments = {key: value for key, value in patch.items() if value is not None}
-        arguments.update({"id": project_id, "confirmed": True})
+        arguments.update({"id": resolved_id, "confirmed": True})
         updated = call_tool("update_project", arguments)
         return {"ok": True, "project": updated[0] if isinstance(updated, list) and updated else updated}
     project = next((item for item in projects if item.get("id") == project_id), None)

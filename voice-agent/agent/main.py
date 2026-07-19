@@ -201,7 +201,23 @@ def build_write_tools() -> list[Callable[..., Any]]:
 
         action = dict(pending)
         pending.clear()
-        result = await _run_blocking(action["function"], *action["args"], **action["kwargs"])
+        try:
+            result = await _run_blocking(action["function"], *action["args"], **action["kwargs"])
+        except Exception as error:
+            return {
+                "ok": False,
+                "confirmed": False,
+                "action": action["action"],
+                "message": f"The approved action failed: {error}",
+            }
+        if isinstance(result, dict) and result.get("ok") is False:
+            return {
+                "ok": False,
+                "confirmed": False,
+                "action": action["action"],
+                "message": result.get("error", "The approved action was not applied."),
+                "result": result,
+            }
         return {"ok": True, "confirmed": True, "action": action["action"], "result": result}
 
     return [add_idea, add_task, update_task, update_project, add_project_note, confirm_pending_action]
