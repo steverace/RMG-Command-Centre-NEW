@@ -285,7 +285,17 @@ async function supabaseRequest(env: Env, table: string, query: string, init: Req
     ...init,
     headers: supabaseHeaders(env, init.headers as Record<string, string> | undefined),
   })
-  if (!res.ok) throw new Error(`Supabase ${table} request failed: ${res.status}`)
+  if (!res.ok) {
+    const responseText = await res.text()
+    let detail: string
+    try {
+      const parsed = JSON.parse(responseText) as { message?: string; details?: string; hint?: string; code?: string }
+      detail = [parsed.message, parsed.details, parsed.hint, parsed.code].filter(Boolean).join(' | ')
+    } catch {
+      detail = responseText.trim().slice(0, 400)
+    }
+    throw new Error(`Supabase ${table} request failed: ${res.status}${detail ? ` - ${detail}` : ''}`)
+  }
   return res.json()
 }
 
