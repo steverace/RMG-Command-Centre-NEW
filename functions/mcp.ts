@@ -319,6 +319,16 @@ async function supabasePatch(env: Env, table: string, id: string, row: Record<st
   })
 }
 
+async function resolveOwnerId(env: Env, projectId?: string | null) {
+  const query = projectId
+    ? `select=owner_id&deleted_at=is.null&id=eq.${encodeURIComponent(projectId)}&limit=1`
+    : 'select=owner_id&deleted_at=is.null&order=created_at.asc&limit=1'
+  const rows = await supabaseGet(env, 'projects', query) as Array<Record<string, unknown>>
+  const ownerId = stringOrNull(rows[0]?.owner_id)
+  if (!ownerId) throw new Error('Unable to determine the RMCC owner for this write')
+  return ownerId
+}
+
 function textResult(value: unknown) {
   return { content: [{ type: 'text', text: typeof value === 'string' ? value : JSON.stringify(value, null, 2) }] }
 }
@@ -438,9 +448,11 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     const title = stringOrNull(params.title)
     if (!title) throw new Error('title is required')
     const readyForAi = params.ready_for_ai === true
+    const projectId = stringOrNull(params.project_id)
     const row = {
+      owner_id: await resolveOwnerId(env, projectId),
       title,
-      project_id: stringOrNull(params.project_id),
+      project_id: projectId,
       client_id: stringOrNull(params.client_id),
       status: 'not_started',
       priority: stringOrNull(params.priority) ?? 'medium',
@@ -470,6 +482,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     const projectName = stringOrNull(params.name)
     if (!projectName) throw new Error('name is required')
     const row = {
+      owner_id: await resolveOwnerId(env),
       name: projectName,
       type: stringOrNull(params.type) ?? 'personal',
       status: stringOrNull(params.status) ?? 'not_started',
@@ -501,6 +514,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     const ideaName = stringOrNull(params.name)
     if (!ideaName) throw new Error('name is required')
     const row = {
+      owner_id: await resolveOwnerId(env),
       name: ideaName,
       description: stringOrNull(params.description),
       category: stringOrNull(params.category),
