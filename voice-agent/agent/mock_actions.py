@@ -47,7 +47,8 @@ def _find_project(project_name: str, source_projects: list[dict[str, Any]] | Non
         (
             project
             for project in records
-            if str(project.get("name", "")).lower() == needle
+            if str(project.get("id", "")).lower() == needle
+            or str(project.get("name", "")).lower() == needle
             or needle in str(project.get("name", "")).lower()
             or str(project.get("name", "")).lower() in needle
         ),
