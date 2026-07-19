@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RMCC Voice Agent Prototype</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <div>
+          <p class="eyebrow">Standalone prototype</p>
+          <h1>RMCC Voice Agent</h1>
+        </div>
+        <div class="status-stack" aria-label="Connection status">
+          <span id="textStatus">Text: ready</span>
+          <span id="micStatus">Mic: idle</span>
+          <span id="livekitStatus">LiveKit: not connected</span>
+        </div>
+      </header>
+
+      <section class="layout">
+        <section class="chat-panel" aria-label="Chat">
+          <section class="rmcc-overview" aria-label="RMCC dashboard overview">
+            <div>
+              <p class="panel-label">Today</p>
+              <strong id="focusPrimary">Loading focus...</strong>
+            </div>
+            <div class="metric-grid" aria-label="RMCC metrics">
+              <button id="metricProjects" class="metric-tile" type="button">
+                <span>Projects</span>
+                <strong>--</strong>
+              </button>
+              <button id="metricTasks" class="metric-tile" type="button">
+                <span>Overdue</span>
+                <strong>--</strong>
+              </button>
+              <button id="metricStale" class="metric-tile" type="button">
+                <span>Stale</span>
+                <strong>--</strong>
+              </button>
+              <button id="metricMoney" class="metric-tile" type="button">
+                <span>Money</span>
+                <strong>--</strong>
+              </button>
+            </div>
+          </section>
+          <div id="messages" class="messages" aria-live="polite"></div>
+          <form id="chatForm" class="composer">
+            <input id="chatInput" type="text" autocomplete="off" placeholder="Ask for today's focus, stale projects, tasks, money, or prepare an update">
+            <button type="submit">Send</button>
+          </form>
+        </section>
+
+        <aside class="controls" aria-label="Voice controls">
+          <section>
+            <h2>Push To Talk</h2>
+            <button id="pttButton" class="primary" type="button">Start recording</button>
+            <button id="releaseMicButton" type="button">Release microphone</button>
+            <p id="micHelp" class="hint warning" hidden></p>
+            <p class="hint">Click once to start, click again to stop. Recording is not continuous.</p>
+          </section>
+
+          <section>
+            <h2>Modes</h2>
+            <label class="toggle-row">
+              <input id="spokenRepliesToggle" type="checkbox">
+              <span>Optional spoken replies</span>
+            </label>
+            <label class="toggle-row">
+              <input id="alwaysOnToggle" type="checkbox">
+              <span>Always-on footer scaffold</span>
+            </label>
+          </section>
+
+          <section>
+            <h2>LiveKit</h2>
+            <button id="livekitConnectButton" class="primary" type="button">Connect to agent</button>
+            <button id="livekitDisconnectButton" type="button" disabled>Disconnect</button>
+            <button id="livekitCheckButton" type="button">Check setup</button>
+            <div id="remoteAudio" aria-label="Remote audio"></div>
+            <p class="hint">Run the agent backend, then connect here for the LiveKit voice session. Text chat reads the protected local RMCC proxy; writes require the connected agent and confirmation.</p>
+          </section>
+
+          <section>
+            <h2>Debug Log</h2>
+            <div id="debugLog" class="debug-log" role="log" aria-live="polite"></div>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+    <footer id="footerAssistant" class="footer-assistant" hidden>
+      <span>Alfred Mode scaffold: on, not listening</span>
+      <button id="footerFocusButton" type="button">Focus</button>
+    </footer>
+
+    <script src="vendor/livekit-client.umd.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

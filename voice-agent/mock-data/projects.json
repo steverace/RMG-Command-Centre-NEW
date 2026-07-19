@@ -1,0 +1,58 @@
+[
+  {
+    "id": "queen-bee",
+    "name": "Queen Bee",
+    "status": "active",
+    "priority": "high",
+    "lastUpdatedDaysAgo": 2,
+    "summary": "Launch funnel and campaign plan for the Queen Bee brand.",
+    "notes": [
+      "Keep the tone premium, direct, and commercially sharp.",
+      "Needs launch checklist before any new experiments."
+    ]
+  },
+  {
+    "id": "rmcc",
+    "name": "Race Media Command Centre",
+    "status": "active",
+    "priority": "critical",
+    "lastUpdatedDaysAgo": 1,
+    "summary": "Operations hub for projects, ideas, tasks, notes, and money tracking.",
+    "notes": [
+      "Voice agent must connect through safe API actions only."
+    ]
+  },
+  {
+    "id": "legit-raffles",
+    "name": "Legit Raffles",
+    "status": "active",
+    "priority": "high",
+    "lastUpdatedDaysAgo": 6,
+    "summary": "Standalone landing page and conversion route for raffle campaigns.",
+    "notes": [
+      "Needs trust messaging and mobile polish."
+    ]
+  },
+  {
+    "id": "creator-retainers",
+    "name": "Creator Retainers",
+    "status": "active",
+    "priority": "medium",
+    "lastUpdatedDaysAgo": 14,
+    "summary": "Retainer offer and follow-up system for recurring client work.",
+    "notes": [
+      "Stale because the offer still needs packaging."
+    ]
+  },
+  {
+    "id": "shorts-engine",
+    "name": "Shorts Engine",
+    "status": "active",
+    "priority": "medium",
+    "lastUpdatedDaysAgo": 18,
+    "summary": "Repeatable short-form video workflow for planning and delivery.",
+    "notes": [
+      "Useful, but less urgent than outstanding money."
+    ]
+  }
+]

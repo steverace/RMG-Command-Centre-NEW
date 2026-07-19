@@ -16,6 +16,18 @@ npm run dev
 - Output directory: `dist`
 - Node version: 20 (set env var `NODE_VERSION=20` if needed)
 
+## Voice agent
+
+The standalone LiveKit voice-agent prototype is consolidated under `voice-agent/`. The Command Centre `/voice` page links to its local test interface at `http://127.0.0.1:8790/`.
+
+From this repository root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\\voice-agent\\run-web.ps1
+```
+
+The prototype still uses mock RMCC data. The next integration step is a protected read-only API boundary, followed by confirmed write actions; it must not connect directly to Supabase or expose service-role credentials in the browser.
+
 ## Environment variables (set in Cloudflare Pages > Settings > Environment variables)
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`

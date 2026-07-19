@@ -50,7 +50,7 @@ const tools = [
     description: 'Create a new Command Centre task. Set ready_for_ai true only when the task has enough context for an AI to attempt it.',
     inputSchema: {
       type: 'object',
-      required: ['title'],
+      required: ['title', 'confirmed'],
       properties: {
         title: { type: 'string' },
         notes: { type: 'string' },
@@ -61,6 +61,7 @@ const tools = [
         energy: { type: 'string', enum: ['quick', 'deep_work', 'admin', 'annoying', 'client_chasing'] },
         ready_for_ai: { type: 'boolean' },
         requires_manual: { type: 'boolean' },
+        confirmed: { type: 'boolean', description: 'Must be true after the human has approved the exact action.' },
       },
       additionalProperties: false,
     },
@@ -70,7 +71,7 @@ const tools = [
     description: 'Create a new Command Centre project with safe defaults. Use for real work that should be tracked in RMCC.',
     inputSchema: {
       type: 'object',
-      required: ['name'],
+      required: ['name', 'confirmed'],
       properties: {
         name: { type: 'string' },
         type: { type: 'string', enum: ['client', 'personal', 'affiliate', 'directory', 'app', 'seo', 'content', 'automation', 'admin'] },
@@ -82,6 +83,7 @@ const tools = [
         next_action: { type: 'string' },
         ai_can_help: { type: 'boolean' },
         manual_required: { type: 'boolean' },
+        confirmed: { type: 'boolean', description: 'Must be true after the human has approved the exact action.' },
       },
       additionalProperties: false,
     },
@@ -91,7 +93,7 @@ const tools = [
     description: 'Capture a new opportunity or research idea in Command Centre.',
     inputSchema: {
       type: 'object',
-      required: ['name'],
+      required: ['name', 'confirmed'],
       properties: {
         name: { type: 'string' },
         description: { type: 'string' },
@@ -100,6 +102,7 @@ const tools = [
         next_research_step: { type: 'string' },
         expected_monthly_revenue: { type: 'number' },
         revenue_confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
+        confirmed: { type: 'boolean', description: 'Must be true after the human has approved the exact action.' },
       },
       additionalProperties: false,
     },
@@ -109,7 +112,7 @@ const tools = [
     description: 'Update a Command Centre task by id, including status, notes, due date, priority, and Ready for AI state.',
     inputSchema: {
       type: 'object',
-      required: ['id'],
+      required: ['id', 'confirmed'],
       properties: {
         id: { type: 'string' },
         title: { type: 'string' },
@@ -122,6 +125,26 @@ const tools = [
         energy: { type: 'string', enum: ['quick', 'deep_work', 'admin', 'annoying', 'client_chasing'] },
         ready_for_ai: { type: 'boolean' },
         requires_manual: { type: 'boolean' },
+        confirmed: { type: 'boolean', description: 'Must be true after the human has approved the exact action.' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'update_project',
+    description: 'Update safe project workflow fields after explicit human confirmation. Money fields and deletion are not exposed.',
+    inputSchema: {
+      type: 'object',
+      required: ['id', 'confirmed'],
+      properties: {
+        id: { type: 'string' },
+        status: { type: 'string', enum: ['not_started', 'active', 'paused', 'waiting', 'completed', 'abandoned'] },
+        priority: { type: 'string', enum: ['low', 'medium', 'high', 'urgent'] },
+        due_date: { type: 'string', description: 'YYYY-MM-DD' },
+        next_action: { type: 'string' },
+        ai_can_help: { type: 'boolean' },
+        manual_required: { type: 'boolean' },
+        confirmed: { type: 'boolean', description: 'Must be true after the human has approved the exact action.' },
       },
       additionalProperties: false,
     },
@@ -131,10 +154,11 @@ const tools = [
     description: 'Move a task into Steve input needed when AI cannot proceed without more context or a decision.',
     inputSchema: {
       type: 'object',
-      required: ['id', 'reason'],
+      required: ['id', 'reason', 'confirmed'],
       properties: {
         id: { type: 'string' },
         reason: { type: 'string' },
+        confirmed: { type: 'boolean', description: 'Must be true after the human has approved the exact action.' },
       },
       additionalProperties: false,
     },
@@ -144,10 +168,11 @@ const tools = [
     description: 'Mark a task complete after AI has carried it out, leaving a review note for Steve.',
     inputSchema: {
       type: 'object',
-      required: ['id', 'summary'],
+      required: ['id', 'summary', 'confirmed'],
       properties: {
         id: { type: 'string' },
         summary: { type: 'string' },
+        confirmed: { type: 'boolean', description: 'Must be true after the human has approved the exact action.' },
       },
       additionalProperties: false,
     },
@@ -157,12 +182,13 @@ const tools = [
     description: 'Append project context as an auditable AI event. Use for notes, decisions, or context discovered outside RMCC.',
     inputSchema: {
       type: 'object',
-      required: ['project_id', 'summary'],
+      required: ['project_id', 'summary', 'confirmed'],
       properties: {
         project_id: { type: 'string' },
         summary: { type: 'string' },
         source: { type: 'string' },
         vault_path: { type: 'string' },
+        confirmed: { type: 'boolean', description: 'Must be true after the human has approved the exact action.' },
       },
       additionalProperties: false,
     },
@@ -300,6 +326,12 @@ function stringList(value: unknown): string[] {
   return value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).map((item) => item.trim())
 }
 
+function requireConfirmed(params: Record<string, unknown>) {
+  if (params.confirmed !== true) {
+    throw new Error('This write action requires confirmed=true after explicit human approval')
+  }
+}
+
 function entityType(value: unknown) {
   const v = stringOrNull(value)
   if (!v || !['project', 'client', 'task', 'idea', 'quote', 'goal'].includes(v)) throw new Error('valid entity_type is required')
@@ -392,6 +424,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     return textResult({ projects, tasks, metrics })
   }
   if (name === 'create_task') {
+    requireConfirmed(params)
     const title = stringOrNull(params.title)
     if (!title) throw new Error('title is required')
     const readyForAi = params.ready_for_ai === true
@@ -423,6 +456,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     return textResult(created)
   }
   if (name === 'create_project') {
+    requireConfirmed(params)
     const projectName = stringOrNull(params.name)
     if (!projectName) throw new Error('name is required')
     const row = {
@@ -453,6 +487,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     return textResult(created)
   }
   if (name === 'create_idea') {
+    requireConfirmed(params)
     const ideaName = stringOrNull(params.name)
     if (!ideaName) throw new Error('name is required')
     const row = {
@@ -481,6 +516,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     return textResult(created)
   }
   if (name === 'update_task') {
+    requireConfirmed(params)
     const id = stringOrNull(params.id)
     if (!id) throw new Error('id is required')
     const patch: Record<string, unknown> = {}
@@ -508,7 +544,29 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     })
     return textResult(updated)
   }
+  if (name === 'update_project') {
+    requireConfirmed(params)
+    const id = stringOrNull(params.id)
+    if (!id) throw new Error('id is required')
+    const patch: Record<string, unknown> = {}
+    for (const key of ['status', 'priority', 'due_date', 'next_action'] as const) {
+      if (Object.prototype.hasOwnProperty.call(params, key)) patch[key] = stringOrNull(params[key])
+    }
+    if (typeof params.ai_can_help === 'boolean') patch.ai_can_help = params.ai_can_help
+    if (typeof params.manual_required === 'boolean') patch.manual_required = params.manual_required
+    if (!Object.keys(patch).length) throw new Error('at least one safe project field is required')
+    const updated = await supabasePatch(env, 'projects', id, patch)
+    await agentEvent(env, {
+      action: 'update_project',
+      entity_type: 'project',
+      entity_id: id,
+      summary: `Updated project ${id}`,
+      metadata: patch,
+    })
+    return textResult(updated)
+  }
   if (name === 'mark_task_needs_steve') {
+    requireConfirmed(params)
     const id = stringOrNull(params.id)
     const reason = stringOrNull(params.reason)
     if (!id || !reason) throw new Error('id and reason are required')
@@ -532,6 +590,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     return textResult(updated)
   }
   if (name === 'mark_task_complete_for_review') {
+    requireConfirmed(params)
     const id = stringOrNull(params.id)
     const summary = stringOrNull(params.summary)
     if (!id || !summary) throw new Error('id and summary are required')
@@ -556,6 +615,7 @@ async function callTool(name: string, params: Record<string, unknown>, env: Env)
     return textResult(updated)
   }
   if (name === 'append_project_context') {
+    requireConfirmed(params)
     const projectId = stringOrNull(params.project_id)
     const summary = stringOrNull(params.summary)
     if (!projectId || !summary) throw new Error('project_id and summary are required')

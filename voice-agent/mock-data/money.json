@@ -1,0 +1,23 @@
+[
+  {
+    "id": "money-acme",
+    "client": "Acme Fitness",
+    "projectId": "creator-retainers",
+    "amount": 1250,
+    "due": "overdue"
+  },
+  {
+    "id": "money-northern-autos",
+    "client": "Northern Autos",
+    "projectId": "shorts-engine",
+    "amount": 780,
+    "due": "friday"
+  },
+  {
+    "id": "money-bee-club",
+    "client": "Bee Founders Club",
+    "projectId": "queen-bee",
+    "amount": 420,
+    "due": "today"
+  }
+]

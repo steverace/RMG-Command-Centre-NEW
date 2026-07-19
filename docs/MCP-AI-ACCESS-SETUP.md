@@ -30,6 +30,7 @@ The older `SUPABASE_SERVICE_ROLE_KEY` name also works for legacy Supabase projec
 - `create_project`
 - `create_idea`
 - `update_task`
+- `update_project`
 - `mark_task_needs_steve`
 - `mark_task_complete_for_review`
 - `append_project_context`
@@ -37,7 +38,7 @@ The older `SUPABASE_SERVICE_ROLE_KEY` name also works for legacy Supabase projec
 - `list_knowledge_refs`
 - `get_entity_context`
 
-The task write tools are intentionally narrow. They can create and update tasks, move a task into Steve input needed, or mark an AI-completed task for Steve review.
+The task and project write tools are intentionally narrow. They require `confirmed: true` after the human has approved the exact action. They can create and update tasks, update safe project workflow fields, move a task into Steve input needed, or mark an AI-completed task for Steve review. Money fields and deletion are not exposed.
 
 Project and idea write tools use safe defaults. Knowledge tools only create/read RMCC link records; the local Obsidian bridge creates the actual Markdown files in the vault.
 
