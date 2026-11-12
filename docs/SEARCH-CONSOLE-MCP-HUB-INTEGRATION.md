@@ -125,3 +125,22 @@ Report at the end of each session: files changed, tests, risks, tokens/approval 
 - URL Inspection quota: https://developers.google.com/webmaster-tools/limits
 - Search Analytics row limits: https://developers.google.com/webmaster-tools/v1/searchanalytics/query
 - Candidate source (audit required): https://github.com/AminForou/mcp-gsc
+
+## Initial external-repository security triage (12 November 2026)
+
+**Verdict: HOLD / reference-only. Not approved for installation, execution, forking into production, or access to Google credentials.** Static review only; no dependencies installed and no code executed.
+
+Target: `AminForou/mcp-gsc`, main commit `45291df024c7873b2042c83d7add70ced7bb621f` as inspected 12 Nov 2026. The repo was created March 2025, had approximately 2,180 stars / 281 forks and a 6 Nov 2026 push. These are weak legitimacy signals, not proof of safety. MIT licence; main package `mcp-search-console` v0.4.2; normal Google OAuth/MCP dependencies, with `uv.lock` present.
+
+**Specific source-code concerns** (from `gsc_server.py`):
+
+1. Lines ~1771–1790: remote SSE/HTTP mode explicitly sets `mcp.settings.transport_security.enable_dns_rebinding_protection = False`. This is unacceptable unmodified for a network-exposed production service. Treat remote mode as unsafe without additional security analysis and strong authentication/network isolation.
+2. Lines ~1726–1762: the exposed `reauthenticate` tool **deletes the existing OAuth token file before verifying new credentials or completing a replacement login**. That can disconnect live integrations and should not be an agent-exposed tool.
+3. Lines ~1573–1620: `submit_sitemap` is directly registered as an MCP tool and calls the sitemap submit API without checking `GSC_ALLOW_DESTRUCTIVE`. The default Google read-only OAuth scope would deny this, but preexisting broader-scope credentials or changed configuration could allow it. The Hub pilot must not expose any write tools, even accidentally.
+4. The package registers property add/remove and sitemap delete tools controlled by `GSC_ALLOW_DESTRUCTIVE`, and uses `webmasters` scope when enabled; inappropriate for the Phase 1 read-only pilot.
+5. OAuth refresh credentials are persisted as local JSON, without project-level explicit at-rest encryption in the inspected module. A shared multi-client server requires encrypted storage, strict file/DB access and robust secret redaction.
+6. Some third-party directories claim no SECURITY.md and no formal release; GitHub repository files inspected showed no .github folder or SECURITY.md in root. These are maintenance-process gaps, not evidence of maliciousness.
+
+**What the static review did NOT find:** No apparent arbitrary shell execution, obvious exfiltration endpoint, hidden downloader, suspicious embedded domain or obvious external telemetry in the main Python module. The visible imports use Google authentication/client packages, FastMCP and standard libraries. However this is **not** a clean bill of health: no isolated execution, full commit-chain review, PyPI provenance verification or dependency CVE scan has been performed. The lockfile contains substantial transitive dependencies and requires automated vulnerability scanning and install-hook verification before any installation, even in development.
+
+**Required follow-up security gate:** check package publisher/provenance, dependency versions against OSV/PyPI advisories, all source diffs and maintainer integrity, signed tags/release provenance if any, test code side effects, all remote transport/auth paths, tool authority boundaries, secret handling and outbound network requests. Work from a **pinned reviewed commit**, verify downloads/hashes, execute only in an isolated least-privilege test environment with dummy credentials, and ask Steve to approve use after a documented verdict. **Do not interpret this triage as permission to proceed.**
